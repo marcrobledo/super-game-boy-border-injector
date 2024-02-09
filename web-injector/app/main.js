@@ -340,33 +340,43 @@ function checkFileSGB(file){
 
 
 
-function checkRepeatBytes(file, offset, len){
+function findRepeatBytes(file, offset, len){
 	file.seek(offset);
-	for(var i=0; i<len; i++){
-		if(file.readByte()!==0xff)
-			return false;
-	}
-	return offset;
+	var b=file.readByte();
+	return findBytes(file, {offset:file.getOffset(), len:1, data:Array(len - 1).fill(b), reverse: false});
 }
-function findRepeatBytes(file, offset, len, len2, reverse){
-	for(var i=0; i<len; i++){
-		var offset2;
-		if(!reverse)
-			offset2=offset+i;
-		else
-			offset2=offset-16-i;
 
-		if(checkRepeatBytes(file, offset2, len2)){
-			return offset2;
+function findBytes(file, obj){
+	var startOffset=obj.offset;
+	var len=obj.len;
+	var bytes=obj.data;
+	var reverse=obj.reverse;
+
+	for(var i=0; i<len; i++){
+		var searchOffset;
+		if(!reverse)
+			searchOffset=startOffset+i;
+		else
+			searchOffset=startOffset-bytes.length+i;
+
+		file.seek(searchOffset);
+		var found=true;
+		for(var j=0; j<bytes.length && found; j++){
+			if(file.readByte()!==bytes[j]){
+				found=false
+			}
 		}
+		if(found)
+			return searchOffset;
 	}
 	return null;
 }
 
 // places the injector will look for free space
 const VALID_BANK0_FREE_SPACE=[
-	{offset:0x4000, len:0x80, reverse: true},
-	{offset:0x0000, len:0xf0, reverse: false}
+	{offset:0x4000, len:0x80, data:[0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff], reverse: true},
+	{offset:0x0000, len:0xf0, data:[0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff], reverse: false},
+	{offset:0x0000, len:0xf0, data:[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], reverse: false}
 ];
 
 
@@ -381,7 +391,7 @@ function buildROM(){
 		
 		var freeSpace0=null;
 		for(var i=0; i<VALID_BANK0_FREE_SPACE.length && freeSpace0===null; i++){
-			freeSpace0=findRepeatBytes(rom, VALID_BANK0_FREE_SPACE[i].offset, VALID_BANK0_FREE_SPACE[i].len, 16, VALID_BANK0_FREE_SPACE[i].reverse);
+			freeSpace0=findBytes(rom, VALID_BANK0_FREE_SPACE[i]);
 		}
 		if(freeSpace0===null)
 			throw new Error('Bank 0 has no free space');
@@ -389,7 +399,7 @@ function buildROM(){
 		console.log('free space found in bank 0: $'+freeSpace0.toString(16));
 		var freeBankX=null;
 		for(var i=0x4000; i<rom.length() && !freeBankX; i+=0x4000){
-			if(checkRepeatBytes(rom, i, 0x4000)){
+			if(findRepeatBytes(rom, i, 0x4000)){
 				freeBankX=i / 0x4000;
 			}
 		}

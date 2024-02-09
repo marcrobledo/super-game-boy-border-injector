@@ -25,6 +25,9 @@ export class FileParser{
 	getBuffer(){
 		return this.#u8array.buffer;
 	}
+	getOffset(){
+		return this.#offset;
+	}
 	
 	seek(offset){
 		this.#offset=offset;
