@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<title>Super Game Boy Border Injector</title>
+	<meta name="description" content="This tool can easily inject a Super Game Boy border into a Game Boy ROM."/>
+	<meta name="keywords" content="super, game, boy, border, injector, sgb, snes"/>
+	<meta http-equiv="content-Type" content="text/html; charset=UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+	<link type="text/css" rel="stylesheet" href="app/style.css" media="all"/>
+	<link rel="shortcut icon" href="./assets/favicon.png" type="image/png" sizes="16x16"/>
+
+	<script src="app/cash.min.js"></script>
+	<script src="app/FileSaver.min.js"></script>
+	<script type="module" src="app/main.js"></script>
+</head>
+
+<body>
+<div style="flex-grow:1; display:flex; align-items:center;">
+	<div id="wrapper">	
+		<main>
+			<header>
+				<h1 class="hide">Super Game Boy Border Injector</h1>
+				<img id="logo" src="assets/logo.png" loading="lazy" alt="Super Game Boy Border Injector logo" />
+				<hr/>
+			</header>
+			
+			<div id="alerts">
+				<div class="alert alert-warning">
+					<strong>Warning: this tool is very WIP at the moment.</strong><br/>
+					Keep in mind, there is no guarantee your game will ever work.<br/>
+					Feel free to contribute by reporting any bug you might find <a href="https://github.com/marcrobledo/super-game-boy-border-injector/" target="_blank">here</a>.<br/>
+				</div>
+			</div>
+
+			<div id="intro">
+				<p>This tool allows you to easily add a Super Game Boy border to your favorite Game Boy game!*</p>
+				<p>Most of the Game Boy library should be compatible.</p>
+				<p>Convert an image to SGB border data files with <a href="https://www.marcrobledo.com/super-game-boy-border-converter" target="_blank">Super Game Boy Border Converter</a>.</p>
+			</div>
+
+
+
+			<div id="picker-rom" class="picker clickable">
+				<span id="picker-status-rom" class="picker-status"></span>
+				<div>
+					<div id="picker-title-rom" class="picker-title">ROM file</div>
+					<div id="picker-message-rom" class="picker-message mono"></div>
+				</div>
+			</div>
+
+			<div id="picker-border-map" class="picker clickable">
+				<span id="picker-status-border-map" class="picker-status"></span>
+				<div>
+					<div id="picker-title-border-map" class="picker-title">SGB border map</div>
+					<div id="picker-message-border-map" class="picker-message mono"></div>
+				</div>
+			</div>
+
+			<div id="picker-border-tiles" class="picker clickable">
+				<span id="picker-status-border-tiles" class="picker-status"></span>
+				<div>
+					<div id="picker-title-border-tiles" class="picker-title">SGB border tiles</div>
+					<div id="picker-message-border-tiles" class="picker-message mono"></div>
+				</div>
+			</div>
+
+			<div id="picker-border-palettes" class="picker clickable">
+				<span id="picker-status-border-palettes" class="picker-status"></span>
+				<div>
+					<div id="picker-title-border-palettes" class="picker-title">SGB border palettes</div>
+					<div id="picker-message-border-palettes" class="picker-message mono"></div>
+				</div>
+			</div>
+
+			<div id="picker-custom-gb-palette" class="picker">
+				<span id="picker-status-custom-gb-palette" class="picker-status clickable"></span>
+				<div style="flex-grow:1; display:flex; justify-content: space-between; align-items:center;">
+					<div id="picker-title-custom-gb-palette" class="picker-title">Custom GB palette</div>
+					<div>
+						<input type="color" id="input-color0" value="#e0f8d0" />
+						<input type="color" id="input-color1" value="#88c070" />
+						<input type="color" id="input-color2" value="#346856" />
+						<input type="color" id="input-color3" value="#081820" />
+					</div>
+				</div>
+			</div>
+
+			<input type="file" id="input-file-rom" accept=".gb,.gbc" class="hide" />
+			<input type="file" id="input-file-border-map" accept=".bin,.sgb" class="hide" />
+			<input type="file" id="input-file-border-tiles" accept=".bin,.sgb" class="hide" />
+			<input type="file" id="input-file-border-palettes" accept=".bin,.sgb" class="hide" />
+		</main>
+
+		<aside>
+			<div id="container-preview">
+				<canvas id="canvas-preview" width="256" height="224"></canvas>
+			</div>
+
+			<div>
+				<button type="button" id="btn-build" class="btn btn-primary" disabled><img src="assets/octicon_package_dependents.svg" class="octicon" /> Build SGB ROM</button>
+			</div>
+		</aside>
+	</div>
+</div>
+
+
+<footer>
+	Super Game Boy Border Injector v0.1<br/>
+	made with <span class="love" title="Super love">Super <img src="assets/octicon_heart.svg" alt="love" class="octicon" /></span> by <a href="https://www.marcrobledo.com" target="_blank">Marc Robledo</a>
+	<img src="assets/octicon_github.svg" alt="GitHub logo" class="octicon" /> <a href="https://github.com/marcrobledo/super-game-boy-border-injector/"  target="_blank">See sourcecode in GitHub</a>
+</footer>
+</body>
+
+</html>
