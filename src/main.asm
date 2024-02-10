@@ -158,8 +158,15 @@ sgb_init:
 	pop		bc
 .end:
 	ld		a, 1 ;restore MBC initial mapped bank
+
+
 	ret
 
+;align next data to 16 bytes, but also give some free space
+;for easier additional patching for the web injector
+REPT 11
+	nop
+ENDR
 
 
 

@@ -1,7 +1,8 @@
 import { FileParser } from './gb-parser.js'
 import { PaletteGB, PaletteSNES, ColorRGB15, Tile4BPP, MapSNES } from './console-graphics.js'
 import { EXAMPLE_GB_TILE_DATA, EXAMPLE_GB_MAP_DATA, SGB_DEFAULT_PALETTE } from './preview-example-data.js'
-import { ASSEMBLED_HOOK_INFO, ASSEMBLED_SGB_CODE } from './assembled-code.js'
+import { ASSEMBLED_HOOK_INFO, getAssembledHookInfo, ASSEMBLED_SGB_CODE, SGB_INIT_RET_OFFSET } from './assembled-code.js'
+import { GAMES_WITH_JUNK } from './games-with-junk.js'
 
 
 /*
@@ -380,24 +381,55 @@ function findBytes(file, obj){
 	return null;
 }
 
-
+function findFreeSpace(rom, assembledHookInfo){
+	var freeSpace0=findBytes(rom, {offset:0x4000, len:0x80, data:buildRepeatData(assembledHookInfo.code.length, 0xff), reverse: true});
+	if(freeSpace0===null)
+		freeSpace0=findBytes(rom, {offset:0x0000, len:0xf3, data:buildRepeatData(assembledHookInfo.code.length, 0xff), reverse: false});
+	if(freeSpace0===null)
+		freeSpace0=findBytes(rom, {offset:0x0000, len:0xf3, data:buildRepeatData(assembledHookInfo.code.length, 0x00), reverse: false});
+	return freeSpace0;
+}
 
 
 function buildROM(){
 	var rom=pickerStatus['rom'];
 
 	try{
+		var relativeJump=false;
 		var jpOffset=false;
 		
-		//search for first jp in entry point ($0100)
+		//search for first jr/jp in entry point ($0100)
 		//most commercial games use the recommended nop+jp
 		//looks like GB Studio games skip the nop for some reason, so let's look for a jp first at jp
 		rom.seek(0x0100);
-		if(rom.readByte()===0xc3 || rom.readByte()===0xc3) //jp in $0100 or $0101
+		var firstByte=rom.readByte();
+
+		if(firstByte===0xc3){ //jp in $0100
 			jpOffset=rom.getOffset() - 1;
-		else
+			relativeJump=false;
+		}else if(firstByte===0x18){ //jr in $0100
+			jpOffset=rom.getOffset() - 1;
+			relativeJump=true;
+		}
+		
+		if(!jpOffset){
+			firstByte=rom.readByte();
+			if(firstByte===0xc3){ //jp in $0101
+				jpOffset=rom.getOffset() - 1;
+				relativeJump=false;
+			}else if(firstByte===0x18){ //jr in $0101
+				jpOffset=rom.getOffset() - 1;
+				relativeJump=true;
+			}
+		}
+
+		if(!jpOffset)
 			throw new Error('Game has no jp entry point');
-		console.log('found jp entry point to $0'+jpOffset.toString(16));
+
+		if(relativeJump)
+			console.log('found jr entry point to $0'+jpOffset.toString(16));
+		else
+			console.log('found jp entry point to $0'+jpOffset.toString(16));
 
 
 
@@ -442,25 +474,43 @@ function buildROM(){
 				freeBankX++;
 			}
 
-			assembledHookInfo=ASSEMBLED_HOOK_INFO[1];
+			assembledHookInfo=getAssembledHookInfo('mbc1_extra');
 		}else{
-			console.log('using common assembled code');
-			assembledHookInfo=ASSEMBLED_HOOK_INFO[0];
+			assembledHookInfo=getAssembledHookInfo('default');
 		}
 
 
 		//find free space in bank 0
-		var freeSpace0=findBytes(rom, {offset:0x4000, len:0x80, data:buildRepeatData(assembledHookInfo.code.length, 0xff), reverse: true});
-		if(freeSpace0===null)
-			freeSpace0=findBytes(rom, {offset:0x0000, len:0xf0, data:buildRepeatData(assembledHookInfo.code.length, 0xff), reverse: false});
-		if(freeSpace0===null)
-			freeSpace0=findBytes(rom, {offset:0x0000, len:0xf0, data:buildRepeatData(assembledHookInfo.code.length, 0x00), reverse: false});
+		var freeSpace0=findFreeSpace(rom, assembledHookInfo);
 		
-		if(freeSpace0===null)
-			throw new Error('Bank 0 has no free space (need '+assembledHookInfo.code.length+' bytes)');
+		if(freeSpace0===null){
+			if(!freeSpace0){
+				rom.seek(0x014e);
+				var globalChecksum=rom.readWord();
+				//check if it's a known game with a safe offset
+				for(var i=0; i<GAMES_WITH_JUNK.length && !freeSpace0; i++){
+					if(GAMES_WITH_JUNK[i].globalChecksum===globalChecksum){
+						console.log('known game found: '+GAMES_WITH_JUNK[i].title);
+						freeSpace0=GAMES_WITH_JUNK[i].safeOffset;
+					}
+				}
+			}
 
-		console.log('free space found in bank 0: $'+freeSpace0.toString(16));
+			if(assembledHookInfo.id==='default'){
+				//game has no free 16 bytes, try to inject the 14 bytes optimized version
+				console.log('trying to fit optimized_hl hook code');
+				assembledHookInfo=getAssembledHookInfo('optimized_hl');
+				freeSpace0=findFreeSpace(rom, assembledHookInfo);
+			}
 
+			if(!freeSpace0){
+				throw new Error('Bank 0 has no free space (need '+assembledHookInfo.code.length+' bytes)');
+			}
+		}
+
+		console.log(assembledHookInfo.code.length+' free bytes found in bank 0: $'+freeSpace0.toString(16));
+
+		console.log('using hook code: '+assembledHookInfo.id);
 		
 		
 		//add SGB flags to header
@@ -471,11 +521,24 @@ function buildROM(){
 
 		//replace entry point
 		rom.seek(jpOffset + 1);
-		var originalEntryPoint=rom.readWord();
+		var originalEntryPoint;
+		if(relativeJump){
+			var relativeOffset=rom.readByte();
+			if(relativeOffset & 0x80){ //negative
+				originalEntryPoint=jpOffset + 2 - ((relativeOffset ^ 0xff) + 1);
+			}else{
+				originalEntryPoint=jpOffset + 2 + relativeOffset;
+			}
+			console.log('replaced jr by jp $0'+originalEntryPoint.toString(16));
+			rom.seek(jpOffset);
+			rom.writeByte(0xc3); //replace jr with jp
+		}else{
+			originalEntryPoint=rom.readWord();
+		}
 		rom.seek(jpOffset + 1);
 		rom.writeWord(freeSpace0);
 
-		//fix CGB only header (set it to dual DMG+CGB compatibility for emulators)
+		//fix CGB only flag (set it to dual DMG+CGB compatibility for emulators)
 		rom.seek(0x0143);
 		var cgbFlag=rom.readByte();
 		if(cgbFlag===0xc0){
@@ -489,7 +552,7 @@ function buildROM(){
 		assembledHookInfo.code[assembledHookInfo.patchOffsets.romBankNumber]=freeBankX;
 		assembledHookInfo.code[assembledHookInfo.patchOffsets.entryPoint]=originalEntryPoint & 0xff;
 		assembledHookInfo.code[assembledHookInfo.patchOffsets.entryPoint + 1]=(originalEntryPoint >> 8) & 0xff;
-		if(assembledHookInfo===ASSEMBLED_HOOK_INFO[1]){ //MBC1+1MB
+		if(assembledHookInfo.id==='mbc1_extra'){ //MBC1+1MB
 			assembledHookInfo.code[assembledHookInfo.patchOffsets.romBankNumberUpperbits]=(freeBankX & 0b01100000) >> 5;
 		}
 		rom.writeBytes(assembledHookInfo.code);
@@ -497,6 +560,13 @@ function buildROM(){
 		//write SGB code
 		rom.seek(freeBankX * 0x4000);
 		rom.writeBytes(ASSEMBLED_SGB_CODE);
+
+		//patch sgb_init ret (if needed)
+		if(assembledHookInfo.patchSgbInit){
+			console.log('patching sgb_init ret');
+			rom.seek(freeBankX * 0x4000 + SGB_INIT_RET_OFFSET);
+			rom.writeBytes(assembledHookInfo.patchSgbInit);
+		}
 		
 		//disable custom GB palette by nopping call sgb_packet_transfer
 		if(!pickerStatus['custom-gb-palette']){
