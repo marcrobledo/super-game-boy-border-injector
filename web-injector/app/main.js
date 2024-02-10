@@ -387,9 +387,17 @@ function buildROM(){
 	var rom=pickerStatus['rom'];
 
 	try{
-		rom.seek(0x0101);
-		if(rom.readByte()!==0xc3) //jp
+		var jpOffset=false;
+		
+		//search for first jp in entry point ($0100)
+		//most commercial games use the recommended nop+jp
+		//looks like GB Studio games skip the nop for some reason, so let's look for a jp first at jp
+		rom.seek(0x0100);
+		if(rom.readByte()===0xc3 || rom.readByte()===0xc3) //jp in $0100 or $0101
+			jpOffset=rom.getOffset() - 1;
+		else
 			throw new Error('Game has no jp entry point');
+		console.log('found jp entry point to $0'+jpOffset.toString(16));
 
 
 
@@ -462,10 +470,19 @@ function buildROM(){
 		rom.writeByte(0x33);
 
 		//replace entry point
-		rom.seek(0x0102);
+		rom.seek(jpOffset + 1);
 		var originalEntryPoint=rom.readWord();
-		rom.seek(0x0102);
+		rom.seek(jpOffset + 1);
 		rom.writeWord(freeSpace0);
+
+		//fix CGB only header (set it to dual DMG+CGB compatibility for emulators)
+		rom.seek(0x0143);
+		var cgbFlag=rom.readByte();
+		if(cgbFlag===0xc0){
+			rom.seek(0x0143);
+			rom.writeByte(0x80);
+			console.log('set CGB flag to dual DMG+CGB compatibility');
+		}
 
 		//patch entry point hook
 		rom.seek(freeSpace0);
