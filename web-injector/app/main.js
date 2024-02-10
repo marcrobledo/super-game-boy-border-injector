@@ -2,7 +2,7 @@ import { FileParser } from './gb-parser.js'
 import { PaletteGB, PaletteSNES, ColorRGB15, Tile4BPP, MapSNES } from './console-graphics.js'
 import { EXAMPLE_GB_TILE_DATA, EXAMPLE_GB_MAP_DATA, SGB_DEFAULT_PALETTE } from './preview-example-data.js'
 import { ASSEMBLED_HOOK_INFO, getAssembledHookInfo, ASSEMBLED_SGB_CODE, SGB_INIT_RET_OFFSET } from './assembled-code.js'
-import { GAMES_WITH_JUNK } from './games-with-junk.js'
+import { KNOWN_GAMES } from './known-games.js'
 
 
 /*
@@ -480,30 +480,56 @@ function buildROM(){
 		}
 
 
+		//check if it's a known game
+		var knownGame=null;
+		rom.seek(0x014e);
+		var globalChecksum=rom.readWord();
+		for(var i=0; i<KNOWN_GAMES.length && !knownGame; i++){
+			if(KNOWN_GAMES[i].globalChecksum===globalChecksum){
+				knownGame=KNOWN_GAMES[i];
+				console.log('known game found: '+knownGame.title);
+			}
+		}
+
 		//find free space in bank 0
 		var freeSpace0=findFreeSpace(rom, assembledHookInfo);
 		
 		if(freeSpace0===null){
-			if(!freeSpace0){
-				rom.seek(0x014e);
-				var globalChecksum=rom.readWord();
-				//check if it's a known game with a safe offset
-				for(var i=0; i<GAMES_WITH_JUNK.length && !freeSpace0; i++){
-					if(GAMES_WITH_JUNK[i].globalChecksum===globalChecksum){
-						console.log('known game found: '+GAMES_WITH_JUNK[i].title);
-						freeSpace0=GAMES_WITH_JUNK[i].safeOffset;
-					}
-				}
+			if(knownGame && knownGame.safeOffset){
+				//if it's a known game, use a known safe offset for free space
+				freeSpace0=GAMES_WITH_JUNK[i].safeOffset;
 			}
 
 			if(assembledHookInfo.id==='default'){
 				//game has no free 16 bytes, try to inject the 14 bytes optimized version
 				console.log('trying to fit optimized_hl hook code');
 				assembledHookInfo=getAssembledHookInfo('optimized_hl');
+				//try again
+				freeSpace0=findFreeSpace(rom, assembledHookInfo);
+			}
+			
+			if(freeSpace0===null){
+				//if it still hasn't found free space, check if we can nop some rst
+				var nFound=0;
+				for(var i=0; i<0x40; i+=0x08){
+					var foundFreeRst=findBytes(rom, {offset:i, len:1, data:[0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], reverse: false});
+					if(foundFreeRst!==null){
+						console.log('nopped potential free rst: 0x'+i.toString(16));
+						rom.seek(i);
+						rom.writeByte(0x00);
+						nFound++;
+						if(nFound===2){
+							//we nopped two rsts, there is enough space already
+							break;
+						}
+					}
+				}
+
+				//try again
 				freeSpace0=findFreeSpace(rom, assembledHookInfo);
 			}
 
-			if(!freeSpace0){
+			if(freeSpace0===null){
 				throw new Error('Bank 0 has no free space (need '+assembledHookInfo.code.length+' bytes)');
 			}
 		}
@@ -556,6 +582,17 @@ function buildROM(){
 			assembledHookInfo.code[assembledHookInfo.patchOffsets.romBankNumberUpperbits]=(freeBankX & 0b01100000) >> 5;
 		}
 		rom.writeBytes(assembledHookInfo.code);
+
+
+		//if it's a known SGB game, disable its original border loading
+		if(knownGame && knownGame.nops){
+			console.log('disabling original game SGB border');
+			for(var i=0; i<knownGame.nops.length; i++){
+				rom.seek(knownGame.nops[i]);
+				rom.writeBytes([0x00, 0x00, 0x00]); //three nops
+			}
+		}
+
 
 		//write SGB code
 		rom.seek(freeBankX * 0x4000);
