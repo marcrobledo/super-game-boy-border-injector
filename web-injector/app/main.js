@@ -1,7 +1,7 @@
 import { FileParser } from './gb-parser.js'
 import { PaletteGB, PaletteSNES, ColorRGB15, Tile4BPP, MapSNES } from './console-graphics.js'
 import { EXAMPLE_GB_TILE_DATA, EXAMPLE_GB_MAP_DATA, SGB_DEFAULT_PALETTE } from './preview-example-data.js'
-import { ASSEMBLED_HOOK, ASSEMBLED_HOOK_BANK_NUMBER, ASSEMBLED_HOOK_ENTRY_POINT, ASSEMBLED_SGB_CODE } from './assembled-code.js'
+import { ASSEMBLED_HOOK_INFO, ASSEMBLED_SGB_CODE } from './assembled-code.js'
 
 
 /*
@@ -25,6 +25,7 @@ var pickerStatus={
 };
 var bufferedFiles={};
 var currentRomName;
+var currentRomType;
 
 function setPickerStatus(id, status, message){
 	pickerStatus[id]=status;
@@ -218,7 +219,8 @@ function checkFileRom(file){
 	var result={
 		supported:false,
 		title:'Invalid or incompatible Game Boy ROM',
-		banks: nBanks
+		mbc:0,
+		banks: 0
 	}
 
 	try{
@@ -248,7 +250,9 @@ function checkFileRom(file){
 		for(var i=0; i<CARTRIDGE_TYPES.length; i++){
 			if(CARTRIDGE_TYPES[i].id===byteType){
 				result.supported=CARTRIDGE_TYPES[i].supported;
+				result.mbc=CARTRIDGE_TYPES[i].mbc;
 				result.title=CARTRIDGE_TYPES[i].title;
+				result.banks=nBanks;
 				break;
 			}
 		}
@@ -257,6 +261,7 @@ function checkFileRom(file){
 		if(!result.supported){
 			throw new Error(message);
 		}
+		currentRomType=result;
 
 		var fileSize=nBanks*16384;
 		if((fileSize / 1048576) < 1)
@@ -340,10 +345,13 @@ function checkFileSGB(file){
 
 
 
-function findRepeatBytes(file, offset, len){
+function buildRepeatData(len, data){
+	return Array(len).fill(data);
+}
+function findRepeatBytes(file, offset, len, repeatMany){
 	file.seek(offset);
 	var b=file.readByte();
-	return findBytes(file, {offset:file.getOffset(), len:1, data:Array(len - 1).fill(b), reverse: false});
+	return findBytes(file, {offset:file.getOffset(), len:repeatMany || 1, data:buildRepeatData(len -1, b), reverse: false});
 }
 
 function findBytes(file, obj){
@@ -372,12 +380,6 @@ function findBytes(file, obj){
 	return null;
 }
 
-// places the injector will look for free space
-const VALID_BANK0_FREE_SPACE=[
-	{offset:0x4000, len:0x80, data:[0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff], reverse: true},
-	{offset:0x0000, len:0xf0, data:[0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff], reverse: false},
-	{offset:0x0000, len:0xf0, data:[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], reverse: false}
-];
 
 
 
@@ -388,15 +390,10 @@ function buildROM(){
 		rom.seek(0x0101);
 		if(rom.readByte()!==0xc3) //jp
 			throw new Error('Game has no jp entry point');
-		
-		var freeSpace0=null;
-		for(var i=0; i<VALID_BANK0_FREE_SPACE.length && freeSpace0===null; i++){
-			freeSpace0=findBytes(rom, VALID_BANK0_FREE_SPACE[i]);
-		}
-		if(freeSpace0===null)
-			throw new Error('Bank 0 has no free space');
 
-		console.log('free space found in bank 0: $'+freeSpace0.toString(16));
+
+
+		//search a free bank, expand rom if needed
 		var freeBankX=null;
 		for(var i=0x4000; i<rom.length() && !freeBankX; i+=0x4000){
 			if(findRepeatBytes(rom, i, 0x4000)){
@@ -426,6 +423,36 @@ function buildROM(){
 			rom.seek(0x0148);
 			rom.writeByte(Math.log2(nBanks) - 1);
 		}
+
+
+		var assembledHookInfo;
+		if(currentRomType.mbc===1 && freeBankX>=0x20){
+			console.log('using assembled code for MBC1+ROM bigger than 1MB');
+			if(freeBankX===0x20 || freeBankX===0x40 || freeBankX===0x60){
+				//banks $20, $40, $60 need additional code to be accesed
+				//use $21, $41 or $61 instead
+				freeBankX++;
+			}
+
+			assembledHookInfo=ASSEMBLED_HOOK_INFO[1];
+		}else{
+			console.log('using common assembled code');
+			assembledHookInfo=ASSEMBLED_HOOK_INFO[0];
+		}
+
+
+		//find free space in bank 0
+		var freeSpace0=findBytes(rom, {offset:0x4000, len:0x80, data:buildRepeatData(assembledHookInfo.code.length, 0xff), reverse: true});
+		if(freeSpace0===null)
+			freeSpace0=findBytes(rom, {offset:0x0000, len:0xf0, data:buildRepeatData(assembledHookInfo.code.length, 0xff), reverse: false});
+		if(freeSpace0===null)
+			freeSpace0=findBytes(rom, {offset:0x0000, len:0xf0, data:buildRepeatData(assembledHookInfo.code.length, 0x00), reverse: false});
+		
+		if(freeSpace0===null)
+			throw new Error('Bank 0 has no free space (need '+assembledHookInfo.code.length+' bytes)');
+
+		console.log('free space found in bank 0: $'+freeSpace0.toString(16));
+
 		
 		
 		//add SGB flags to header
@@ -442,10 +469,13 @@ function buildROM(){
 
 		//patch entry point hook
 		rom.seek(freeSpace0);
-		ASSEMBLED_HOOK[ASSEMBLED_HOOK_BANK_NUMBER]=freeBankX;
-		ASSEMBLED_HOOK[ASSEMBLED_HOOK_ENTRY_POINT]=originalEntryPoint & 0xff;
-		ASSEMBLED_HOOK[ASSEMBLED_HOOK_ENTRY_POINT + 1]=(originalEntryPoint >> 8) & 0xff;
-		rom.writeBytes(ASSEMBLED_HOOK);
+		assembledHookInfo.code[assembledHookInfo.patchOffsets.romBankNumber]=freeBankX;
+		assembledHookInfo.code[assembledHookInfo.patchOffsets.entryPoint]=originalEntryPoint & 0xff;
+		assembledHookInfo.code[assembledHookInfo.patchOffsets.entryPoint + 1]=(originalEntryPoint >> 8) & 0xff;
+		if(assembledHookInfo===ASSEMBLED_HOOK_INFO[1]){ //MBC1+1MB
+			assembledHookInfo.code[assembledHookInfo.patchOffsets.romBankNumberUpperbits]=(freeBankX & 0b01100000) >> 5;
+		}
+		rom.writeBytes(assembledHookInfo.code);
 
 		//write SGB code
 		rom.seek(freeBankX * 0x4000);
@@ -496,7 +526,7 @@ function buildROM(){
 		rom.writeByte(newChecksum & 0xff);
 
 
-		var newRomName=currentRomName.replace(/\.(gbc?)$/, ' (SGB Compatible).$1');
+		var newRomName=currentRomName.replace(/\.(gbc?)$/, ' (SGB Enhanced).$1');
 		var blob=new Blob([rom.getBuffer()], {type: 'application/octet-stream'});
 		saveAs(blob, newRomName);
 

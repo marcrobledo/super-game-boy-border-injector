@@ -1,5 +1,5 @@
 ; ------------------------------------------------------------------------------
-;                 Super Game Boy border injector for Kid Dracula
+;         Super Game Boy border injector for Zelda Link's Awakening (non-DX)
 ;                             by Marc Robledo 2024
 ;
 ;   More info at https://github.com/marcrobledo/super-game-boy-border-injector
@@ -22,7 +22,20 @@ DEF GAME_BOOT_OFFSET EQU $0150
 ; interruption or rst vector ($0000-$00ff).
 ; In the worst scenario, you will need to carefully move some code/data to
 ; other banks.
-DEF BANK0_FREE_SPACE EQU $3fd0
+DEF BANK0_FREE_SPACE EQU $0005
+
+
+
+; MBC type
+; --------
+; (see more here: https://gbdev.io/pandocs/MBCs.html)
+; MBC needs to be here specified in these special cases:
+; - MBC1 + expanded ROM to 1Mb or bigger (Zelda Link's Awakening [non-DX])
+; - (to-do!) MBC5 + expanded ROM to 8Mb
+; other cases will just ignore this value
+; keep in mind that, in these special cases, the hook subroutine will grow
+; from 16 bytes to 25 bytes!
+DEF MBC EQU 1
 
 
 
@@ -37,9 +50,9 @@ DEF BANK0_FREE_SPACE EQU $3fd0
 ; - 64kb   --> bank $04
 ; - 128kb  --> bank $08
 ; - 256kb  --> bank $10
-; - 512kb  --> bank $20
-; - 1024kb --> bank $40
-DEF SGB_CODE_BANK EQU $10
+; - 512kb  --> bank $21 (bank $20 needs more code to be accessed in MBC1)
+; - 1024kb --> bank $41 (bank $40 needs more code to be accessed in MBC1)
+DEF SGB_CODE_BANK EQU $21
 
 
 
@@ -51,8 +64,8 @@ DEF SGB_CODE_BANK EQU $10
 ; warning: even if set to 0, do not delete BUILD_CUSTOM_GB_PALETTE macro!
 DEF CUSTOM_GB_PALETTE_ENABLED EQU 1
 MACRO BUILD_CUSTOM_GB_PALETTE
-    RGB 29, 30, 26	;color 0 (light)
-    RGB 30, 18, 4	;color 1
-    RGB 9, 7, 18	;color 2
-    RGB 3, 0, 5		;color 3 (dark)
+    RGB 27, 30, 25	;color 0 (light)
+    RGB 17, 23, 14	;color 1
+    RGB 6, 13, 10	;color 2
+    RGB 1, 3, 4		;color 3 (dark)
 ENDM

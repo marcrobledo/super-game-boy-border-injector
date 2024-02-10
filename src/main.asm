@@ -42,9 +42,19 @@ boot_hook:
 	ld		a, BANK(sgb_init)
 	ld		[rROMB0], a
 
+	IF MBC == 1 && SGB_CODE_BANK>=$20
+		ld		a, ((BANK(sgb_init) & %01100000) >> 5)
+		ld		[rRAMB], a
+	ENDC
+
 	call	sgb_init
 
 	ld		[rROMB0], a
+	IF MBC == 1 && SGB_CODE_BANK>=$20
+		xor		a
+		ld		[rRAMB], a
+	ENDC
+
 	pop		af
 	jp		boot_original
 

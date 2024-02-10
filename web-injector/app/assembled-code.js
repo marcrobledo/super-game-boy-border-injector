@@ -1,16 +1,41 @@
-export const ASSEMBLED_HOOK=[
-	0xf5,					//push	af
-	0x3e, 'bank_number',	//ld	a, sgb_init_bank
-	0xea, 0x00, 0x20,		//ld	[0x2000], a
-	0xcd, 0x00, 0x40,		//call	0x4000
-	0xea, 0x00, 0x20,		//ld	[0x2000], a
-	0xf1,					//pop	af
-	0xc3, 'entry_point_low', 'entry_point_high' //jp original_entry_point
+export const ASSEMBLED_HOOK_INFO=[
+	//common case
+	{
+		code:[
+			0xf5,						//push	af
+			0x3e, 'rom_bank_number',	//ld	a, sgb_init_bank
+			0xea, 0x00, 0x20,			//ld	[0x2000], a
+			0xcd, 0x00, 0x40,			//call	0x4000
+			0xea, 0x00, 0x20,			//ld	[0x2000], a
+			0xf1,						//pop	af
+			0xc3, 'entry_point_low', 'entry_point_high' //jp original_entry_point
+		]
+	},
+	//MBC1 + larger than 512kb
+	//requires additional code to write to $4000 (ROM bank upper bits)
+	{
+		code:[
+			0xf5,								//push	af
+			0x3e, 'rom_bank_number',			//ld	a, sgb_init_bank_lowerbits
+			0xea, 0x00, 0x20,					//ld	[0x2000], a
+			0x3e, 'rom_bank_number_upperbits',	//ld	a, sgb_init_bank_upperbits
+			0xea, 0x00, 0x40,					//ld	[0x4000], a
+			0xcd, 0x00, 0x40,					//call	0x4000
+			0xea, 0x00, 0x20,					//ld	[0x2000], a
+			0xaf,								//xor	a
+			0xea, 0x00, 0x40,					//ld	[0x4000], a
+			0xf1,								//pop	af
+			0xc3, 'entry_point_low', 'entry_point_high' //jp original_entry_point
+		]
+	}
 ];
-
-
-export const ASSEMBLED_HOOK_BANK_NUMBER=ASSEMBLED_HOOK.indexOf('bank_number');
-export const ASSEMBLED_HOOK_ENTRY_POINT=ASSEMBLED_HOOK.indexOf('entry_point_low');
+ASSEMBLED_HOOK_INFO.forEach(function(assembledInfo){
+	assembledInfo.patchOffsets={
+		romBankNumber: assembledInfo.code.indexOf('rom_bank_number'),
+		romBankNumberUpperbits: assembledInfo.code.indexOf('rom_bank_number_upperbits'),
+		entryPoint: assembledInfo.code.indexOf('entry_point_low')
+	}
+});
 
 // assembled code from "SGB Bank - Code" SECTION in main.asm
 export const ASSEMBLED_SGB_CODE=[
