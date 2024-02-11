@@ -171,9 +171,9 @@ function refreshAside(){
 }
 
 const CARTRIDGE_TYPES=[
-	{supported:false, id:0x00, mbc:0, title:'ROM (missing MBC)'},
-	{supported:false, id:0x08, mbc:0, title:'ROM + RAM (missing MBC)'},
-	{supported:false, id:0x09, mbc:0, title:'ROM + RAM + Battery (missing MBC)'},
+	{supported:true, id:0x00, mbc:0, title:'ROM (no MBC)'},
+	{supported:true, id:0x08, mbc:0, title:'ROM + RAM (no MBC)'},
+	{supported:true, id:0x09, mbc:0, title:'ROM + RAM + Battery (no MBC)'},
 	{supported:true, id:0x01, mbc:1, title:'MBC1'},
 	{supported:true, id:0x02, mbc:1, title:'MBC1 + RAM'},
 	{supported:true, id:0x03, mbc:1, title:'MBC1 + RAM + Battery'},
@@ -250,6 +250,7 @@ function checkFileRom(file){
 
 		for(var i=0; i<CARTRIDGE_TYPES.length; i++){
 			if(CARTRIDGE_TYPES[i].id===byteType){
+				result.id=CARTRIDGE_TYPES[i].id;
 				result.supported=CARTRIDGE_TYPES[i].supported;
 				result.mbc=CARTRIDGE_TYPES[i].mbc;
 				result.title=CARTRIDGE_TYPES[i].title;
@@ -395,6 +396,18 @@ function buildROM(){
 	var rom=pickerStatus['rom'];
 
 	try{
+		//add MBC to ROM if needed
+		if(!currentRomType.mbc){
+			rom.seek(0x0147)
+			if(currentRomType.id===0x00){ //ROM
+				rom.writeByte(0x01);
+			}else if(currentRomType.id===0x08){ //ROM + RAM
+				rom.writeByte(0x02);
+			}else if(currentRomType.id===0x09){ //ROM + RAM + Battery
+				rom.writeByte(0x03);
+			}
+		}
+
 		var relativeJump=false;
 		var jpOffset=false;
 		
