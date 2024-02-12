@@ -45,5 +45,17 @@ export const KNOWN_GAMES=[
 		title:'Pokemon - Edicion Amarilla - Edicion Especial Pikachu (Spain)',
 		globalChecksum:0x3756,
 		nops:[bankOffset(0x1c, 0x6211), bankOffset(0x1c, 0x621e)]
+	},{
+		title:'Mega Man V (USA)',
+		globalChecksum:0x8e10,
+		nops:[bankOffset(0x0f, 0x6197)]
+	},{
+		title:'Mega Man V (Europe)',
+		globalChecksum:0x175a,
+		nops:[bankOffset(0x0f, 0x6197)]
+	},{
+		title:'Rockman World 5 (Japan)',
+		globalChecksum:0x29b0,
+		nops:[bankOffset(0x0f, 0x6199)]
 	}
 ];
