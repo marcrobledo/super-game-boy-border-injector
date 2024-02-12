@@ -510,7 +510,7 @@ function buildROM(){
 		if(freeSpace0===null){
 			if(knownGame && knownGame.safeOffset){
 				//if it's a known game, use a known safe offset for free space
-				freeSpace0=GAMES_WITH_JUNK[i].safeOffset;
+				freeSpace0=knownGame.safeOffset;
 			}
 
 			if(assembledHookInfo.id==='default'){
