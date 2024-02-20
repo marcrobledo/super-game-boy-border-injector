@@ -20,7 +20,7 @@ export const KNOWN_GAMES=[
 	},
 	{
 		title:'Super Mario Land 2 DX v1.8.1',
-		globalChecksum:0x8e89,
+		globalChecksum:0xd9cf,
 		safeOffset:0x39d9
 	},
 	
