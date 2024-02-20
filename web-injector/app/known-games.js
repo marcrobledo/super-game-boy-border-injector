@@ -13,6 +13,16 @@ export const KNOWN_GAMES=[
 		globalChecksum:0xa5f4,
 		safeOffset:0x3fe0
 	},
+	{
+		title:'Super Mario Land 2 - 6 Golden Coins (USA, Europe)',
+		globalChecksum:0xf9e0,
+		safeOffset:0x39d9
+	},
+	{
+		title:'Super Mario Land 2 DX v1.8.1',
+		globalChecksum:0xd9cf,
+		safeOffset:0x39d9
+	},
 	
 	
 	
