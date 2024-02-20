@@ -10,7 +10,7 @@ It comes in two different implementations:
 
 
 ## Web implementation
-This is probably what everyone is looking for: a simple [web app](https://www.marcrobledo.com/super-game-boy-border-converter/) that does the magic for you!
+This is probably what everyone is looking for: a simple [web app](https://www.marcrobledo.com/super-game-boy-border-injector/) that does the magic for you!
 
 Just select your desired ROM and Super Game Boy border data and the app will build the SGB compatible ROM with your border and even custom palette.
 
