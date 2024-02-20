@@ -19,6 +19,7 @@
   --color-footer-link: #d4cdff;
   --color-footer-hover: #e8e4ff;
   --color-love: #ff2188;
+  --color-love-highlight: #ff50a1;
   --main-padding: 20px;
   --main-border-radius: 4px;
   
@@ -51,6 +52,10 @@ span.clickable:hover{text-decoration:underline}
 .hide{display:none}
 .mono{font-family:var(--font-monospace)}
 .mt-0{margin-top: 0 !important;}
+.mt-10{margin-top: 10px !important;}
+.mt-20{margin-top: 20px !important;}
+.mb-10{margin-bottom: 10px !important;}
+.mb-20{margin-bottom: 20px !important;}
 
 
 #wrapper{
@@ -178,6 +183,20 @@ main{
 	color: var(--color-primary-hover);
 }
 
+#intro a#btn-donate{
+	display:inline-block;
+	background-color: var(--color-love);
+	padding: 12px 24px;
+	border-radius: 3px;
+	color:white;
+	text-decoration:none;
+	font-size: 110%;
+	font-weight:bold;
+	line-height:0;
+}
+#intro a#btn-donate:hover{
+	background-color: var(--color-love-highlight);
+}
 
 
 

@@ -6,7 +6,7 @@ import { KNOWN_GAMES } from './known-games.js'
 
 
 /*
-	Very preliminary JS implementation of Super Game Boy Injector
+	JS implementation of Super Game Boy Border Injector
 	by Marc Robledo 2024
 	
 	see https://github.com/marcrobledo/super-game-boy-border-injector
@@ -367,7 +367,7 @@ function findBytes(file, obj){
 		if(!reverse)
 			searchOffset=startOffset+i;
 		else
-			searchOffset=startOffset-bytes.length+i;
+			searchOffset=startOffset-bytes.length-i;
 
 		file.seek(searchOffset);
 		var found=true;
@@ -513,7 +513,7 @@ function buildROM(){
 				freeSpace0=knownGame.safeOffset;
 			}
 
-			if(assembledHookInfo.id==='default'){
+			if(freeSpace0===null && assembledHookInfo.id==='default'){
 				//game has no free 16 bytes, try to inject the 14 bytes optimized version
 				console.log('trying to fit optimized_hl hook code');
 				assembledHookInfo=getAssembledHookInfo('optimized_hl');
