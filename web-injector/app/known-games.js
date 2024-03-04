@@ -67,5 +67,17 @@ export const KNOWN_GAMES=[
 		title:'Rockman World 5 (Japan)',
 		globalChecksum:0x29b0,
 		nops:[bankOffset(0x0f, 0x6199)]
+	},{
+		title:'Game Boy Camera (USA, Europe) (SGB Enhanced)',
+		globalChecksum:0xf9ba,
+		nops:[0x1f4b /* CHR_TRN(0) */, 0x1f59 /* CHR_TRN(1) */, 0x1f67 /* PCT_TRN */]
+	},{
+		title:'Game Boy Camera Gold (USA) (SGB Enhanced)',
+		globalChecksum:0x901e,
+		nops:[0x1f4b /* CHR_TRN(0) */, 0x1f59 /* CHR_TRN(1) */, 0x1f67 /* PCT_TRN */]
+	},{
+		title:'Pocket Camera (Japan) (Rev 1) (SGB Enhanced)',
+		globalChecksum:0x6293,
+		nops:[0x1e49 /* CHR_TRN(0) */, 0x1e57 /* CHR_TRN(1) */, 0x1e65 /* PCT_TRN */]
 	}
 ];

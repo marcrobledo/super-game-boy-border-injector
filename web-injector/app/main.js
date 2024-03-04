@@ -194,7 +194,7 @@ const CARTRIDGE_TYPES=[
 	{supported:true, id:0x1d, mbc:5, title:'MBC5 + RAM + Rumble'},
 	{supported:true, id:0x1e, mbc:5, title:'MBC5 + RAM + Battery + Rumble'},
 	{supported:true, id:0x22, mbc:7, title:'MBC7 + RAM + Battery + Gyro'},
-	{supported:false, id:0xfc, mbc:0, title:'GB Camera + RAM + Battery (unsupported)'},
+	{supported:true, id:0xfc, mbc:0, title:'GB Camera + RAM + Battery (unsupported)'},
 	{supported:false, id:0xff, mbc:0, title:'HuC1 + RAM + Battery (unsupported)'},
 	{supported:false, id:0xfe, mbc:0, title:'HuC3 + RAM + Battery (unsupported)'}
 ];
