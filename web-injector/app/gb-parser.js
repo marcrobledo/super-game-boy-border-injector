@@ -17,7 +17,11 @@ export class FileParser{
 		return this.#u8array.length;
 	}
 	slice(offset, len){
-		return new this.constructor(this.#u8array.slice(offset, offset+len).buffer);
+		if(typeof offset!=='number')
+			offset=0;
+		if(typeof len!=='number')
+			len=this.getBuffer().byteLength - offset;
+		return new this.constructor(this.#u8array.slice(offset, offset+len).buffer, this.name);
 	}
 	toArray(){
 		return Array.from(this.#u8array);

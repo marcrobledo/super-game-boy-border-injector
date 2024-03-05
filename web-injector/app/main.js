@@ -393,7 +393,7 @@ function findFreeSpace(rom, assembledHookInfo){
 
 
 function buildROM(){
-	var rom=pickerStatus['rom'];
+	var rom=pickerStatus['rom'].slice();
 
 	try{
 		//add MBC to ROM if needed
