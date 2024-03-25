@@ -98,6 +98,28 @@ sgb_init:
 
 	di
 
+    ; Disable LCD
+    ld hl, rLY
+    ld a, $92
+.wait_for_vblank:
+    cp a, [HL]
+    jr nz, .wait_for_vblank
+    xor a, a
+    ldh [rLCDC], a
+
+    ; Delay for SGB warm up
+    ld hl, rDIV ; Operates at 16384 Hz on SGB2, 16779 on SGB1
+    ld b, $2e ; 46, but div may already be close to 0, so 45*256/16779 = 0.69 seconds
+    xor a, a
+.inner_delay_loop:
+    cp a, [hl]
+    jr nz, .inner_delay_loop
+.reset_inner_loop:
+    cp a, [hl]
+    jr z, .reset_inner_loop
+    dec b
+    jr nz, .inner_delay_loop
+
 	; freeze GB screen to avoid garbled graphics being shown when transfering later to VRAM
 	ld		hl, SGB_COMMAND_FREEZE_SCREEN
 	call	sgb_packet_transfer
