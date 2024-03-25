@@ -28,6 +28,7 @@ Thanks to [xenophile](https://github.com/xenophile127), [Imanol Barriuso](https:
 ### How to compile
 1. Get [RGBDS](https://rgbds.gbdev.io/install) and unzip it at `rgbds` folder.
 2. Place the game you are going to patch as `roms/input.gb` file.
+3. Place `sgb_map.bin`, `sgb_tiles.bin` and `sgb_palettes.bin` in `src/`.
 3. Read `src/settings.asm` carefully and edit it, filling all needed offsets and constants for your game.
 4. Compile with `assemble.bat` (Windows) or `assemble.sh` (Unix).
 5. If there were no errors, a ROM `roms/output.gb` will be created.
