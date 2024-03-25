@@ -1,7 +1,7 @@
 import { FileParser } from './gb-parser.js'
 import { PaletteGB, PaletteSNES, ColorRGB15, Tile4BPP, MapSNES } from './console-graphics.js'
 import { EXAMPLE_GB_TILE_DATA, EXAMPLE_GB_MAP_DATA, SGB_DEFAULT_PALETTE } from './preview-example-data.js'
-import { ASSEMBLED_HOOK_INFO, getAssembledHookInfo, ASSEMBLED_SGB_CODE, SGB_INIT_RET_OFFSET } from './assembled-code.js'
+import { ASSEMBLED_HOOK_INFO, getAssembledHookInfo, ASSEMBLED_SGB_CODE, SGB_INIT_CUSTOM_PALETTE_CODE_OFFSET, SGB_INIT_RET_OFFSET } from './assembled-code.js'
 import { KNOWN_GAMES } from './known-games.js'
 
 
@@ -410,7 +410,7 @@ function buildROM(){
 
 		var relativeJump=false;
 		var jpOffset=false;
-		
+
 		//search for first jr/jp in entry point ($0100)
 		//most commercial games use the recommended nop+jp
 		//looks like GB Studio games skip the nop for some reason, so let's look for a jp first at jp
@@ -445,6 +445,26 @@ function buildROM(){
 			console.log('found jp entry point to $0'+jpOffset.toString(16));
 
 
+		//check if it's a known game
+		var knownGame=null;
+		rom.seek(0x014e);
+		var globalChecksum=rom.readWord();
+		for(var i=0; i<KNOWN_GAMES.length && !knownGame; i++){
+			if(KNOWN_GAMES[i].globalChecksum===globalChecksum){
+				knownGame=KNOWN_GAMES[i];
+				console.log('known game found: '+knownGame.title);
+			}
+		}
+		
+		//GB Camera ROM cannot be expanded, delete data at bank 0x3d
+		//see https://github.com/marcrobledo/super-game-boy-border-injector/issues/5#issuecomment-1978411613
+		if(knownGame && /Game Boy Camera/.test(knownGame.title)){
+			rom.seek(0x3d * 0x4000);
+			for(var i=0; i<0x4000; i++){
+				rom.writeByte(0x00);
+			}
+			console.log('gb camera found, emptying bank 0x3d');
+		}
 
 		//search a free bank, expand rom if needed
 		var freeBankX=null;
@@ -490,18 +510,6 @@ function buildROM(){
 			assembledHookInfo=getAssembledHookInfo('mbc1_extra');
 		}else{
 			assembledHookInfo=getAssembledHookInfo('default');
-		}
-
-
-		//check if it's a known game
-		var knownGame=null;
-		rom.seek(0x014e);
-		var globalChecksum=rom.readWord();
-		for(var i=0; i<KNOWN_GAMES.length && !knownGame; i++){
-			if(KNOWN_GAMES[i].globalChecksum===globalChecksum){
-				knownGame=KNOWN_GAMES[i];
-				console.log('known game found: '+knownGame.title);
-			}
 		}
 
 		//find free space in bank 0
@@ -620,15 +628,20 @@ function buildROM(){
 		
 		//disable custom GB palette by nopping call sgb_packet_transfer
 		if(!pickerStatus['custom-gb-palette']){
-			rom.seek(freeBankX * 0x4000 + (0x4066 - 0x4000));
-			rom.writeBytes([0x00, 0x00, 0x00]); //three nops
+			rom.seek(freeBankX * 0x4000 + SGB_INIT_CUSTOM_PALETTE_CODE_OFFSET);
+			rom.writeBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]); //nops
 		}
 
 		//write data: border map+palettes
 		rom.seek(freeBankX * 0x4000 + (0x5300 - 0x4000));
 		rom.writeBytes(bufferedFiles.borderMap.toArray());
-		for(var i=0; i<32*2*4; i++){
-			rom.writeByte(0x00); //rows 28-31
+		const row28=bufferedFiles.borderMap.slice(27*32 * 2, 32*2).toArray();
+		for(var i=0; i<64; i+=2){
+			row28[i + 1]=row28[i + 1] ^ 0b00000010; //row 28:clone latest row and flip it vertically to avoid scanline flickering
+		}
+		rom.writeBytes(row28);
+		for(var i=0; i<32*2*3; i++){
+			rom.writeByte(0x00); //rows 29-31
 		}
 		rom.writeBytes(bufferedFiles.borderPalettes.toArray());
 
