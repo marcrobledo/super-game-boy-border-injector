@@ -90,7 +90,7 @@ SECTION "SGB Bank - Code", ROMX[$4000], BANK[SGB_CODE_BANK]
 sgb_init:
 	ld		a, c
 	cp		$14
-	jr		nz, .end ;not in SGB mode, return
+	jp		nz, .end ;not in SGB mode, return
 
 	push	bc
 	push	de
@@ -98,27 +98,20 @@ sgb_init:
 
 	di
 
-    ; Disable LCD
-    ld hl, rLY
-    ld a, $92
-.wait_for_vblank:
-    cp a, [HL]
-    jr nz, .wait_for_vblank
-    xor a, a
-    ldh [rLCDC], a
-
-    ; Delay for SGB warm up
-    ld hl, rDIV ; Operates at 16384 Hz on SGB2, 16779 on SGB1
-    ld b, $2e ; 46, but div may already be close to 0, so 45*256/16779 = 0.69 seconds
-    xor a, a
+	; delay two frames for SGB warm up (see https://gbdev.io/pandocs/SGB_Command_System.html#sgb-command-17--mask_en)
+	call	lcd_off
+	ld		hl, rDIV ; operates at 16384 Hz on SGB2, 16779 on SGB1
+	ld		b, $2e ; 46, but div may already be close to 0, so 45*256/16779 = 0.69 seconds
+	xor		a
 .inner_delay_loop:
-    cp a, [hl]
-    jr nz, .inner_delay_loop
+	cp		a, [hl]
+	jr		nz, .inner_delay_loop
 .reset_inner_loop:
-    cp a, [hl]
-    jr z, .reset_inner_loop
-    dec b
-    jr nz, .inner_delay_loop
+	cp		a, [hl]
+	jr		z, .reset_inner_loop
+	dec		b
+	jr		nz, .inner_delay_loop
+
 
 	; freeze GB screen to avoid garbled graphics being shown when transfering later to VRAM
 	ld		hl, SGB_COMMAND_FREEZE_SCREEN
@@ -157,21 +150,28 @@ sgb_init:
 	ld		hl, _data_sgb_border_map
 	call	mem_copy_sgb_4kb
 
-	; transfer 512 game colors to SGB system palette
-	ld		hl, _data_sgb_game_palettes
-	ld		de, SGB_COMMAND_TRANSFER_PALETTES
-	call	mem_copy_sgb_4kb
-	; set game palettes to colors 0, 1, 2 and 3 from previous SGB system palette transfered colors
-	ld		de, SGB_COMMAND_SET_PALETTES_DEFAULT
-	IF DEF(CUSTOM_GB_PALETTE_ENABLED)
+	IF DEF(CUSTOM_GB_PALETTE_ENABLED) && CUSTOM_GB_PALETTE_ENABLED==1
+		; transfer 512 game colors to SGB system palette
+		ld		hl, _data_sgb_game_palettes
+		ld		de, SGB_COMMAND_TRANSFER_PALETTES
+		call	mem_copy_sgb_4kb
+		; set game palettes to colors 0, 1, 2 and 3 from previous SGB system palette transfered colors
+		ld		hl, SGB_COMMAND_SET_PALETTES_DEFAULT
 		call	sgb_packet_transfer
 	ELSE
-		REPT 3
+		REPT 15
 			nop
 		ENDR
 	ENDC
 
-	; freeze GB screen rendering
+	;blank VRAM - fixes garbled graphics
+	call	lcd_off
+	ld		bc, 4096 + (32*14) - 12
+	ld		hl, _VRAM8800
+	call	mem_empty
+	call	lcd_on
+
+	; unfreeze GB screen rendering
 	ld		hl, SGB_COMMAND_UNFREEZE_SCREEN
 	call	sgb_packet_transfer
 
@@ -186,7 +186,7 @@ sgb_init:
 
 ;align next data to 16 bytes, but also give some free space
 ;for easier additional patching for the web injector
-REPT 11
+REPT 25
 	nop
 ENDR
 
@@ -226,9 +226,7 @@ mem_copy_sgb:
 	jr		nz, .loop_row
 
 .finished:
-
-	ld		a, LCDCF_ON|LCDCF_BG8800|LCDCF_BG9800|LCDCF_BGON|LCDCF_OBJ16|LCDCF_OBJOFF|LCDCF_WIN9C00|LCDCF_WINOFF
-	ldh		[rLCDC], a
+	call	lcd_on
 
 	pop		hl ;restore packet offset
 	call	sgb_packet_transfer
@@ -312,6 +310,11 @@ lcd_off:
 	ldh		[rLCDC], a			; We turn off the LCD
 	ret
 
+lcd_on:
+	ld		a, LCDCF_ON|LCDCF_BG8800|LCDCF_BG9800|LCDCF_BGON|LCDCF_OBJ16|LCDCF_OBJOFF|LCDCF_WIN9C00|LCDCF_WINOFF
+	ldh		[rLCDC], a
+	ret
+
 mem_copy:
 	ld		a, [hli]
 	ld		[de], a
@@ -320,6 +323,15 @@ mem_copy:
 	ld		a, c
 	or		b
 	jr		nz,	mem_copy
+	ret
+
+mem_empty:
+	xor		a
+	ld		[hli], a
+	dec		bc
+	ld		a, c
+	or		b
+	jr		nz,	mem_empty
 	ret
 
 ;SGB PACKETS
@@ -346,7 +358,7 @@ DB $79, $10, $08, $00, $0b, $4c, $20, $08, $ea, $ea, $ea, $ea, $ea, $60, $ea, $e
 
 
 SGB_COMMAND_FREEZE_SCREEN:
-	SGB_COMMAND $17, 1 ;MASK_EN(1) - freeze screen
+	SGB_COMMAND $17, 2 ;MASK_EN(2) - freeze screen
 
 SGB_COMMAND_UNFREEZE_SCREEN:
 	SGB_COMMAND $17, 0 ;MASK_EN(0) - unfreeze screen
@@ -369,7 +381,7 @@ SGB_COMMAND_SET_PALETTES_DEFAULT:
 SECTION "SGB Bank - Border data - Map & palettes", ROMX[$5300], BANK[SGB_CODE_BANK]
 _data_sgb_border_map:
 ;border map=2048 bytes
-INCBIN "sgb_border_map.bin"	;rows 0-27
+INCBIN "sgb_border_map.bin", 0, 32*28*2	;rows 0-27
 DS 32 * 2 * 4				;rows 28-31: unused, row 28 should be blank to avoid strange scanline flickering when fading in/out border
 ;border palettes=32 bytes (1 pal), 64 bytes (2 pals), 96 bytes (3 pals), 128 bytes (4 pals, bad results in emulators)
 INCBIN "sgb_border_palettes.bin"
@@ -389,4 +401,4 @@ INCBIN "sgb_border_tiles.bin"
 SECTION "SGB Bank - Border data - Game palettes", ROMX[$7c00], BANK[SGB_CODE_BANK]
 ;user can define up to 512 colors available in SGB
 _data_sgb_game_palettes:
-    BUILD_CUSTOM_GB_PALETTE
+	BUILD_CUSTOM_GB_PALETTE
