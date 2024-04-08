@@ -1,11 +1,15 @@
 Super Game Boy Border Injector
 ==============================
 
-This project contains code designed to inject a custom Super Game Boy Border into any Game Boy ROM in the most possible user-friendly way.
+This project contains allows to inject a custom Super Game Boy Border into (almost) any Game Boy ROM in the most possible user-friendly way.
 
 It comes in two different implementations:
 - Web implementation
 - ASM implementation
+
+[![SGB border for Wink & the Broken Robot (homebrew)](https://github.com/marcrobledo/super-game-boy-border-injector/blob/main/examples/wink.png?raw=true)](https://maxoakland.itch.io/wink-gameboy)
+[![SGB border for Kid Dracula (hack)](https://github.com/marcrobledo/super-game-boy-border-injector/blob/main/examples/kid_dracula.png?raw=true)](hhttps://www.romhacking.net/hacks/8524/)
+[![SGB border for Metroid II: Return of Samus](https://github.com/marcrobledo/super-game-boy-border-injector/blob/main/examples/metroid_2.png?raw=true)](https://www.romhacking.net/hacks/8548/)
 
 
 

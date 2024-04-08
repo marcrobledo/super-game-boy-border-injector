@@ -2,6 +2,8 @@
 ;         Super Game Boy border injector for Zelda Link's Awakening (non-DX)
 ;                             by Marc Robledo 2024
 ;
+;   For use with SGB Border Injector (ASM implementation), replace settings.asm
+;   file with this one.
 ;   More info at https://github.com/marcrobledo/super-game-boy-border-injector
 ; ------------------------------------------------------------------------------
 
