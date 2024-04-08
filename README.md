@@ -7,11 +7,16 @@ It comes in two different implementations:
 - Web implementation
 - ASM implementation
 
+<div style="align=center">
 [![SGB border for Wink & the Broken Robot (homebrew)](https://github.com/marcrobledo/super-game-boy-border-injector/blob/main/examples/wink.png?raw=true)](https://maxoakland.itch.io/wink-gameboy)
-[![SGB border for Kid Dracula (hack)](https://github.com/marcrobledo/super-game-boy-border-injector/blob/main/examples/kid_dracula.png?raw=true)](hhttps://www.romhacking.net/hacks/8524/)
+[![SGB border for Kid Dracula (hack)](https://github.com/marcrobledo/super-game-boy-border-injector/blob/main/examples/kid_dracula.png?raw=true)](https://www.romhacking.net/hacks/8524/)
 [![SGB border for Metroid II: Return of Samus](https://github.com/marcrobledo/super-game-boy-border-injector/blob/main/examples/metroid_2.png?raw=true)](https://www.romhacking.net/hacks/8548/)
-
-
+</div>
+<div style="align=center; font-size:80%; font-style:italic">
+(examples: [Wink & the Broken Robot (homebrew)](https://maxoakland.itch.io/wink-gameboy) by [Max Oakland](https://twitter.com/WinkWinkerson),
+[Kid Dracula](https://www.romhacking.net/hacks/8524/) (hack) by [Kensuyjin_33](https://twitter.com/Kensuyjin_33/) &amp;
+[Metroid II: Return of Samus](https://www.romhacking.net/hacks/8548/) by [Ryallasha N'vetay](https://twitter.com/Ryallasha))
+</div>
 
 ## Web implementation
 This is probably what everyone is looking for: a simple [web app](https://www.marcrobledo.com/super-game-boy-border-injector/) that does the magic for you!
