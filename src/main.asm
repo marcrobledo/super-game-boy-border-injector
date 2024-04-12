@@ -88,16 +88,15 @@ ENDM
 SECTION "SGB Bank - Code", ROMX[$4000], BANK[SGB_CODE_BANK]
 ; borrowed and adapted from https://imanoleasgames.blogspot.com/2016/12/games-aside-1-super-game-boy.html
 sgb_init:
-	ld		a, c
-	cp		$14
-	jp		nz, .end ;not in SGB mode, return
+	call	detect_sgb
+	jp		z, .end ;not in SGB mode, return
 
 	push	bc
 	push	de
 	push	hl
 
 	di
-
+/*
 	; delay two frames for SGB warm up (see https://gbdev.io/pandocs/SGB_Command_System.html#sgb-command-17--mask_en)
 	call	lcd_off
 	ld		hl, rDIV ; operates at 16384 Hz on SGB2, 16779 on SGB1
@@ -111,7 +110,7 @@ sgb_init:
 	jr		z, .reset_inner_loop
 	dec		b
 	jr		nz, .inner_delay_loop
-
+*/
 
 	; freeze GB screen to avoid garbled graphics being shown when transfering later to VRAM
 	ld		hl, SGB_COMMAND_FREEZE_SCREEN
@@ -189,6 +188,49 @@ sgb_init:
 REPT 25
 	nop
 ENDR
+
+
+
+; borrowed and adapted from https://github.com/nitro2k01/whichboot.gb/blob/d565e8b91ef4f54a9cc640e54e3a10f80673e577/common/code/sgb.asm#L54
+; by nitro2k01, released under MIT license: https://raw.githubusercontent.com/nitro2k01/whichboot.gb/main/LICENSE
+detect_sgb:
+	ld		hl, SGB_COMMAND_MULTIPLAYER_REQUEST
+	call	sgb_packet_transfer
+
+	ldh		a, [rP1]
+	and		%00000011
+	cp		$03
+	jr		nz, .sgb_detected
+
+	ld		a, $20
+	ldh		[rP1], a
+	push	af
+	pop		af
+	ld		a, $30
+	ldh		[rP1], a
+	ld		a, $10
+	ldh		[rP1], a
+	push	af
+	pop		af
+	push	af
+	pop		af
+	ld		a, $30
+	ldh		[rP1], a
+	push	af
+	pop		af
+	push	af
+	pop		af
+	ldh		a, [rP1]
+	and		%00000011
+	sub		$03
+	ret		z
+
+.sgb_detected:
+	ld		hl, SGB_COMMAND_MULTIPLAYER_DISABLE
+	call	sgb_packet_transfer
+	ld		a, 1
+	and		a
+	ret
 
 
 
@@ -356,6 +398,12 @@ DB $79, $10, $08, $00, $0b, $4c, $20, $08, $ea, $ea, $ea, $ea, $ea, $60, $ea, $e
 
 
 
+
+SGB_COMMAND_MULTIPLAYER_REQUEST:
+	SGB_COMMAND $11, 1 ;MLT_REQ(1) - request multiplayer mode
+
+SGB_COMMAND_MULTIPLAYER_DISABLE:
+	SGB_COMMAND $11, 0 ;MLT_REQ(0) - disable multiplayer mode
 
 SGB_COMMAND_FREEZE_SCREEN:
 	SGB_COMMAND $17, 2 ;MASK_EN(2) - freeze screen
