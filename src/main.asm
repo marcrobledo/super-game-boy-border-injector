@@ -163,6 +163,7 @@ sgb_init:
 	call	sgb_packet_transfer
 
 .end:
+	call	lcd_on
 	pop		hl
 	pop		de
 	pop		bc
@@ -174,7 +175,7 @@ sgb_init:
 
 ;align next data to 16 bytes, but also give some free space
 ;for easier additional patching for the web injector
-REPT 25
+REPT 22
 	nop
 ENDR
 
