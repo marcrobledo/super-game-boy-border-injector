@@ -15,7 +15,7 @@ Some amazing examples made with SGB Border Injector:
 
 - [Wink & the Broken Robot](https://maxoakland.itch.io/wink-gameboy) (homebrew) by [Max Oakland](https://twitter.com/WinkWinkerson)
 - [Kid Dracula](https://www.romhacking.net/hacks/8524/) (hack) by [Kensuyjin_33](https://twitter.com/Kensuyjin_33/)
-- [Metroid II: Return of Samus](https://www.romhacking.net/hacks/8548/) by [Ryallasha N'vetay](https://twitter.com/Ryallasha))
+- [Metroid II: Return of Samus](https://www.romhacking.net/hacks/8548/) (hack) by [Ryallasha N'vetay](https://twitter.com/Ryallasha)
 
 ## Web implementation
 
