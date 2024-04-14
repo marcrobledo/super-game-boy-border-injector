@@ -88,30 +88,18 @@ ENDM
 SECTION "SGB Bank - Code", ROMX[$4000], BANK[SGB_CODE_BANK]
 ; borrowed and adapted from https://imanoleasgames.blogspot.com/2016/12/games-aside-1-super-game-boy.html
 sgb_init:
-	call	detect_sgb
-	jp		z, .end ;not in SGB mode, return
-
 	push	bc
 	push	de
 	push	hl
 
-	di
-/*
-	; delay two frames for SGB warm up (see https://gbdev.io/pandocs/SGB_Command_System.html#sgb-command-17--mask_en)
-	call	lcd_off
-	ld		hl, rDIV ; operates at 16384 Hz on SGB2, 16779 on SGB1
-	ld		b, $2e ; 46, but div may already be close to 0, so 45*256/16779 = 0.69 seconds
-	xor		a
-.inner_delay_loop:
-	cp		a, [hl]
-	jr		nz, .inner_delay_loop
-.reset_inner_loop:
-	cp		a, [hl]
-	jr		z, .reset_inner_loop
-	dec		b
-	jr		nz, .inner_delay_loop
-*/
+	; delay two frames for SGB warm up before sending first SGB packet (see https://gbdev.io/pandocs/SGB_Command_System.html#sgb-command-17--mask_en)
+	call	sgb_warmup
 
+	call	detect_sgb
+	jp		z, .end ;not in SGB mode, return
+
+
+	; di ;not needed?
 	; freeze GB screen to avoid garbled graphics being shown when transfering later to VRAM
 	ld		hl, SGB_COMMAND_FREEZE_SCREEN
 	call	sgb_packet_transfer
@@ -174,10 +162,11 @@ sgb_init:
 	ld		hl, SGB_COMMAND_UNFREEZE_SCREEN
 	call	sgb_packet_transfer
 
+.end:
 	pop		hl
 	pop		de
 	pop		bc
-.end:
+
 	ld		a, 1 ;restore MBC initial mapped bank
 
 
@@ -188,6 +177,26 @@ sgb_init:
 REPT 25
 	nop
 ENDR
+
+
+
+
+
+sgb_warmup:
+	call	lcd_off ;hides Nintendo boot logo
+	ld		hl, rDIV ; operates at 16384 Hz on SGB2, 16779 on SGB1
+	ld		b, 46 ; div may already be close to 0, so 45*256/16779 = 0.69 seconds
+	xor		a
+.inner_delay_loop:
+	cp		a, [hl]
+	jr		nz, .inner_delay_loop
+.reset_inner_loop:
+	cp		a, [hl]
+	jr		z, .reset_inner_loop
+	dec		b
+	jr		nz, .inner_delay_loop
+	ret
+
 
 
 
@@ -202,19 +211,19 @@ detect_sgb:
 	cp		$03
 	jr		nz, .sgb_detected
 
-	ld		a, $20
+	ld		a, P1F_GET_DPAD
 	ldh		[rP1], a
 	push	af
 	pop		af
-	ld		a, $30
+	ld		a, P1F_GET_NONE
 	ldh		[rP1], a
-	ld		a, $10
+	ld		a, P1F_GET_BTN
 	ldh		[rP1], a
 	push	af
 	pop		af
 	push	af
 	pop		af
-	ld		a, $30
+	ld		a, P1F_GET_NONE
 	ldh		[rP1], a
 	push	af
 	pop		af
@@ -231,8 +240,6 @@ detect_sgb:
 	ld		a, 1
 	and		a
 	ret
-
-
 
 
 ; @param: de - packet offset
@@ -285,34 +292,34 @@ sgb_packet_transfer:
 	and		%00000111					; The three lower bits indicate the number of packets to send
 	ret		z							; We return if there are no packets to send
 	ld		b, a						; We store the number of packets to send
-.sgb_packet_transfer_0:
+.next_packet:
 	push	bc
 	xor		a
 	ld		[rP1], a					; Initial pulse (Start write). P14 = LOW and P15 = LOW
-	ld		a, P1F_4 | P1F_5
+	ld		a, P1F_GET_NONE
 	ld		[rP1], a					; P14 = HIGH and P15 = HIGH between pulses
 	ld		b, 16						; Number of bytes per packet
-.sgb_packet_transfer_1:
+.next_byte:
 	ld		e, 8						; Bits per byte
 	ld		a, [hli]
 	ld		d, a						; Next byte of the packet
-.sgb_packet_transfer_2:
+.next_bit:
 	bit		0, d
-	ld		a, P1F_4					; P14 = HIGH and P15 = LOW (Write 1)
-	jr		nz, .sgb_packet_transfer_3
-	ld		a, P1F_5					; P14 = LOW and P15 = HIGH (Write 0)
-.sgb_packet_transfer_3:
+	ld		a, P1F_GET_BTN					; P14 = HIGH and P15 = LOW (Write 1)
+	jr		nz, .is_1
+	ld		a, P1F_GET_DPAD					; P14 = LOW and P15 = HIGH (Write 0)
+.is_1:
 	ld		[rP1], a					; We send one bit
-	ld		a, P1F_4 | P1F_5
+	ld		a, P1F_GET_NONE
 	ld		[rP1], a					; P14 = HIGH and P15 = HIGH between pulses
 	rr		d							; We rotate the register so that the next bit goes to position 0
 	dec		e
-	jr		nz, .sgb_packet_transfer_2	; We jump while there are bits left to be sent
+	jr		nz, .next_bit	; We jump while there are bits left to be sent
 	dec		b
-	jr		nz, .sgb_packet_transfer_1	; We jump while there are bytes left to be sent
-	ld		a, P1F_5
+	jr		nz, .next_byte	; We jump while there are bytes left to be sent
+	ld		a, P1F_GET_DPAD
 	ld		[rP1], a					; Bit 129, stop bit (Write 0)
-	ld		a, P1F_4 | P1F_5
+	ld		a, P1F_GET_NONE
 	ld		[rP1], a					; P14 = HIGH and P15 = HIGH between pulses
 
 	call	sgb_packet_transfer_wait	; 280024 clock cycles are consumed (66.768646240234375 milliseconds) at 4.194304 mhz + 24 cycles from call
@@ -320,7 +327,7 @@ sgb_packet_transfer:
 	pop	 bc
 	dec	 b
 	ret	 z
-	jr	  .sgb_packet_transfer_0	; We jump while there are packets left to be sent
+	jr	  .next_packet	; We jump while there are packets left to be sent
 
 ; 280024 clock cycles are consumed
 sgb_packet_transfer_wait:
