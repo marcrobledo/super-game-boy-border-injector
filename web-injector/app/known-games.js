@@ -23,6 +23,36 @@ export const KNOWN_GAMES=[
 		globalChecksum:0xd9cf,
 		safeOffset:0x39d9
 	},
+
+
+
+	/*
+		ANTI COPY PROTECTION REMOVAL
+		some games have anti copy protection removal that need to be removed
+		to make the games work after its header has been changed
+	*/
+	{
+		title:'Mega Man IV (USA)',
+		globalChecksum:0xd18c,
+		nops:(function(){
+			const checks=[];
+			for(var i=0; i<28; i++){
+				checks.push(0x3f53 + i*6);
+			}
+			return checks;
+		}())
+	},
+	{
+		title:'Rockman World 4 (Japan)',
+		globalChecksum:0x7b71,
+		nops:(function(){
+			const checks=[];
+			for(var i=0; i<28; i++){
+				checks.push(0x3f53 + i*6);
+			}
+			return checks;
+		}())
+	},
 	
 	
 	

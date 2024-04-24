@@ -605,9 +605,9 @@ function buildROM(){
 		rom.writeBytes(assembledHookInfo.code);
 
 
-		//if it's a known SGB game, disable its original border loading
+		//apply custom patches
 		if(knownGame && knownGame.nops){
-			console.log('disabling original game SGB border');
+			console.log('applying custom patches (original SGB border and/or anticopy protection removal');
 			for(var i=0; i<knownGame.nops.length; i++){
 				rom.seek(knownGame.nops[i]);
 				rom.writeBytes([0x00, 0x00, 0x00]); //three nops
