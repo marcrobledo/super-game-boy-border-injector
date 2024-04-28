@@ -414,7 +414,7 @@ SGB_COMMAND_MULTIPLAYER_DISABLE:
 	SGB_COMMAND $11, 0 ;MLT_REQ(0) - disable multiplayer mode
 
 SGB_COMMAND_FREEZE_SCREEN:
-	SGB_COMMAND $17, 2 ;MASK_EN(2) - freeze screen
+	SGB_COMMAND $17, 1 ;MASK_EN(1) - freeze screen
 
 SGB_COMMAND_UNFREEZE_SCREEN:
 	SGB_COMMAND $17, 0 ;MASK_EN(0) - unfreeze screen
