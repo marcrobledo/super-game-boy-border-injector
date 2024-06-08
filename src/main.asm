@@ -40,7 +40,11 @@ boot_hook:
 	push	af
 
 	ld		a, BANK(sgb_init)
-	ld		[rROMB0], a
+	IF MBC == 2
+		ld		[$2100], a
+	ELSE
+		ld		[rROMB0], a
+	ENDC
 
 	IF MBC == 1 && SGB_CODE_BANK>=$20
 		ld		a, ((BANK(sgb_init) & %01100000) >> 5)
@@ -49,7 +53,11 @@ boot_hook:
 
 	call	sgb_init
 
-	ld		[rROMB0], a
+	IF MBC == 2
+		ld		[$2100], a
+	ELSE
+		ld		[rROMB0], a
+	ENDC
 	IF MBC == 1 && SGB_CODE_BANK>=$20
 		xor		a
 		ld		[rRAMB], a

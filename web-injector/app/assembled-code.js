@@ -48,6 +48,20 @@ export const ASSEMBLED_HOOK_INFO=[
 			0xf1,								//pop	af
 			0xc3, 'entry_point_low', 'entry_point_high' //jp original_entry_point
 		]
+	},
+	//MBC2
+	//rom bank must be written to 0x2100
+	{
+		id:'mbc2',
+		code:[
+			0xf5,						//push	af
+			0x3e, 'rom_bank_number',	//ld	a, sgb_init_bank
+			0xea, 0x00, 0x21,			//ld	[0x2100], a
+			0xcd, 0x00, 0x40,			//call	0x4000
+			0xea, 0x00, 0x21,			//ld	[0x2100], a
+			0xf1,						//pop	af
+			0xc3, 'entry_point_low', 'entry_point_high' //jp original_entry_point
+		]
 	}
 ];
 ASSEMBLED_HOOK_INFO.forEach(function(assembledInfo){

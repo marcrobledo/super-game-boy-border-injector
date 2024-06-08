@@ -31,6 +31,7 @@ DEF BANK0_FREE_SPACE EQU $3ff0
 ; (see more here: https://gbdev.io/pandocs/MBCs.html)
 ; MBC needs to be here specified in these special cases:
 ; - MBC1 + expanded ROM to 1Mb or bigger (Zelda Link's Awakening [non-DX])
+; - MBC2 (bank to switch has to be written to $2100 instead of $2000: https://gbdev.io/pandocs/MBC2.html#registers)
 ; - (to-do!) MBC5 + expanded ROM to 8Mb
 ; other cases will just ignore this value
 ; keep in mind that, in these special cases, the hook subroutine will grow

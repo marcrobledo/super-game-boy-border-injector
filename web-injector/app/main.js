@@ -508,6 +508,8 @@ function buildROM(){
 			}
 
 			assembledHookInfo=getAssembledHookInfo('mbc1_extra');
+		}else if(currentRomType.mbc===2){
+			assembledHookInfo=getAssembledHookInfo('mbc2');
 		}else{
 			assembledHookInfo=getAssembledHookInfo('default');
 		}
