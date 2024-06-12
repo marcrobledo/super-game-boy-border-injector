@@ -109,5 +109,9 @@ export const KNOWN_GAMES=[
 		title:'Pocket Camera (Japan) (Rev 1) (SGB Enhanced)',
 		globalChecksum:0x6293,
 		nops:[0x1e49 /* CHR_TRN(0) */, 0x1e57 /* CHR_TRN(1) */, 0x1e65 /* PCT_TRN */]
+	},{
+		title:'Money Idol Exchanger (Japan) (SGB Enhanced)',
+		globalChecksum:0x2507,
+		nops:[0x0216]
 	}
 ];
