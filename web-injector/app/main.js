@@ -1,146 +1,425 @@
-import { FileParser } from './gb-parser.js'
-import { PaletteGB, PaletteSNES, ColorRGB15, Tile4BPP, MapSNES } from './console-graphics.js'
-import { EXAMPLE_GB_TILE_DATA, EXAMPLE_GB_MAP_DATA, SGB_DEFAULT_PALETTE } from './preview-example-data.js'
-import { ASSEMBLED_HOOK_INFO, getAssembledHookInfo, ASSEMBLED_SGB_CODE, SGB_INIT_CUSTOM_PALETTE_CODE_OFFSET, SGB_INIT_RET_OFFSET } from './assembled-code.js'
-import { KNOWN_GAMES } from './known-games.js'
-
-
 /*
-	JS implementation of Super Game Boy Border Injector
-	by Marc Robledo 2024
-	
-	see https://github.com/marcrobledo/super-game-boy-border-injector
+* JS implementation of Super Game Boy Border Injector
+* https://github.com/marcrobledo/super-game-boy-border-injector
+* (last update: 2025-03-30)
+* By Marc Robledo https://www.marcrobledo.com
+*
+* License:
+*
+* MIT License
+* 
+* Copyright (c) 2024-2025 Marc Robledo
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
 */
 
+import { FileParser } from './file-parser.js'
+import { PaletteGB, PaletteSNES, ColorRGB15, Tile4BPP, MapSNES } from './console-graphics.js'
+import { EXAMPLE_GB_TILE_DATA, EXAMPLE_GB_MAP_DATA, SGB_DEFAULT_PALETTE } from './preview-example-data.js'
+import { getAssembledHookInfo, ASSEMBLED_SGB_CODE, SGB_INIT_CUSTOM_PALETTE_CODE_OFFSET, SGB_INIT_RET_OFFSET } from './assembled-code.js'
+import { KNOWN_GAMES } from './known-games.js'
+import { BORDER_GALLERY, findBordersByName, getBorderDescription } from './border-gallery.js'
 
 
 
 
 
-var pickerStatus={
-	'rom':false,
-	'border-map':false,
-	'border-tiles':false,
-	'border-palettes':false,
-	'custom-gb-palette':false
-};
-var bufferedFiles={};
-var currentRomName;
-var currentRomType;
 
-function setPickerStatus(id, status, message){
-	pickerStatus[id]=status;
+const currentFileData={
+	rom:null, //FileParser
+	romType:null,
+	border:{
+		data:{
+			map:null,
+			tiles:null,
+			palettes:null
+		},
+		tempData:{ //for separate bin files
+			map:null,
+			tiles:null,
+			palettes:null,
+			fromGallery:false
+		}
+	},
+	palette:null
+}
 
-	if(status){
-		$('#picker-'+id).removeClass('picker-ko').addClass('picker-ok');
-	}else{
-		$('#picker-'+id).removeClass('picker-ok')
-		if(id!=='custom-gb-palette')
-			$('#picker-'+id).addClass('picker-ko');
+
+var binFilesQueue;
+
+
+
+
+function buildBorderGallery(){
+	if($('#border-gallery').children().length===0){
+		BORDER_GALLERY.forEach(function(border){
+			const img=new Image();
+			img.loading='lazy';
+			img.onload=function(evt){
+				if(this.naturalHeight===232){
+					//create a canvas to crop the first 8 top pixels
+					const canvas=document.createElement('canvas');
+					canvas.width=this.naturalWidth;
+					canvas.height=this.naturalHeight - 8;
+					const ctx=canvas.getContext('2d');
+					ctx.drawImage(this, 0, -8);
+					this.parentElement.replaceChild(canvas, this);
+				}
+				//console.log('loaded '+this.src+', height: '+this.height);
+			}
+
+			img.src='web-injector/assets/border-gallery/'+border.id+'.png';
+
+			
+			$('#border-gallery').append($('<button></button>').addClass('picker').append(img).append(getBorderDescription(border)).on('click', function(evt){
+
+				fetchBorder(border, true);
+
+				$('#dialog-borders').get(0).close();
+				$('#picker-border').addClass('picker-ok');
+			}));
+		});
 	}
-	$('#picker-message-'+id).html(message);
+}
+function showBorderModal(){
+	if($('#radio-border-file').prop('checked')){
+		$('#choose-border-file').show();
+		$('#choose-border-gallery').hide();
+	}else{
+		$('#choose-border-file').hide();
+		$('#choose-border-gallery').show();
+		buildBorderGallery();
+	}
+
 	
-	refreshAside();
+	currentFileData.border.tempData={
+		map:null,
+		tiles:null,
+		palettes:null
+	}
+	refreshTempDataLog();
+
+	$('#dialog-borders').get(0).showModal();
+}
+function refreshTempDataLog(){
+	const logger=document.getElementById('temp-data-log');
+	logger.innerHTML='';
+	logger.appendChild(document.createElement('div'));
+	logger.appendChild(document.createElement('div'));
+	logger.appendChild(document.createElement('div'));
+
+
+	if(currentFileData.border.tempData.map){
+		logger.children[0].innerHTML='Map data';
+		logger.children[0].className='temp-data-ok';
+	}else{
+		logger.children[0].innerHTML='Map data: missing';
+		logger.children[0].className='temp-data-ko';
+	}
+	if(currentFileData.border.tempData.tiles){
+		logger.children[1].innerHTML='Tile data';
+		logger.children[1].className='temp-data-ok';
+	}else{
+		logger.children[1].innerHTML='Tile data: missing';
+		logger.children[1].className='temp-data-ko';
+	}
+	if(currentFileData.border.tempData.palettes){
+		logger.children[2].innerHTML='Palette data';
+		logger.children[2].className='temp-data-ok';
+	}else{
+		logger.children[2].innerHTML='Palette data: missing';
+		logger.children[2].className='temp-data-ko';
+	}
+}
+
+const buildPaletteFromInputColors=function(){
+	const palette=new PaletteGB(4);
+	for(var i=0; i<4; i++){
+		const components=RGB24toComponents(document.getElementById('input-color'+i).value);
+		palette.colors[i]=new ColorRGB15(components.r, components.g, components.b);
+	}
+	return palette;
+}
+
+
+const Snackbar=(function(){
+	const container=document.createElement('div');
+	container.id='snackbars';
+	const _closeSnackbar=function(snackbar){
+		snackbar.removeEventListener('click',_evtClickSnackbar);
+		window.clearTimeout(snackbar.autoCloseTimeout);
+		snackbar.className=snackbar.className.replace(' open','');
+		window.setTimeout(function(){container.removeChild(snackbar)},600);
+	};
+	const _evtClickSnackbar=function(evt){
+		_closeSnackbar(this);
+	};
+
+	window.addEventListener('load',function(){
+		document.body.appendChild(container);
+	});
+
+	return{
+		show:function(message, className){
+			const snackbar=document.createElement('div');
+			snackbar.className='snackbar'+(typeof className==='string'? ' snackbar-'+className:'');
+			snackbar.innerHTML=message;
+			snackbar.addEventListener('click',_evtClickSnackbar);
+			container.appendChild(snackbar);
+			window.requestAnimationFrame(function(){
+				window.requestAnimationFrame(function(){
+					snackbar.className+=' open';
+					snackbar.autoCloseTimeout=window.setTimeout(function(){
+						_closeSnackbar(snackbar);
+					}, 5000);
+				});
+			});
+		}
+	}
+}());
+
+$(document).ready((evt) => {	
+	/* UI events */
+	document.getElementById('picker-rom').addEventListener('click', function(evt){
+		document.getElementById('input-file-rom').click();
+	});
+	document.getElementById('input-file-rom').addEventListener('change', function(evt) {
+		if(!this.files || !this.files.length)
+			return false;
+
+		const fileName=this.files[0].name;
+		const fileReader=new FileReader();
+		fileReader.onload=function(evt){
+			const file=new FileParser(this.result, fileName);
+			const result=getGameBoyRomInfo(file);
+			if(result.success){
+				currentFileData.rom=file;
+				document.getElementById('picker-title-rom').innerHTML=file.name;
+				document.getElementById('picker-check-rom').title='ROM info: '+result.message;
+				document.getElementById('picker-rom').className='picker picker-ok';
+				refreshBuildButton();
+				const matchedBordersFromGallery=findBordersByName(currentFileData.rom.name);
+				if(matchedBordersFromGallery.length===1){
+					fetchBorder(matchedBordersFromGallery[0]);
+				}
+			}else{
+				Snackbar.show(result.message, 'danger');
+			}
+		};
+		fileReader.readAsArrayBuffer(this.files[0]);
+	});
+
+
+
+
+
+
+	document.querySelector('.btn-dialog-close').addEventListener('click', function(evt){
+		this.parentElement.parentElement.close();
+	});
+
+	$('#picker-border').on('click', (evt) => {
+		showBorderModal();
+	});
+	document.getElementById('picker-palette').addEventListener('click', function(evt){
+		if(currentFileData.palette){
+			currentFileData.palette=null;
+		}else{
+			currentFileData.palette=buildPaletteFromInputColors();
+
+		}
+		refreshCanvasBorder();
+		refreshPickerPalette();
+	});
+	document.getElementById('palette-color0').addEventListener('click', function(evt){
+		evt.stopPropagation();
+		document.getElementById('input-color0').click();
+	});
+	document.getElementById('palette-color1').addEventListener('click', function(evt){
+		evt.stopPropagation();
+		document.getElementById('input-color1').click();
+	});
+	document.getElementById('palette-color2').addEventListener('click', function(evt){
+		evt.stopPropagation();
+		document.getElementById('input-color2').click();
+	});
+	document.getElementById('palette-color3').addEventListener('click', function(evt){
+		evt.stopPropagation();
+		document.getElementById('input-color3').click();
+	});
+
+	$('#radio-border-file').on('change', (evt) => {
+		$('#choose-border-file').show();
+		$('#choose-border-gallery').hide();
+	});
+	$('#radio-border-gallery').on('change', (evt) => {
+		$('#choose-border-file').hide();
+		$('#choose-border-gallery').show();
+		buildBorderGallery();
+	});
+	$('#picker-border-map').on('click', (evt) => {
+		$('#input-file-border').trigger('click');
+	});
+
+	$('#input-file-border').on('change', function(evt) {
+		if(this.files && this.files.length){
+			const inputFiles=Array.from(this.files);
+			const fileSGB=inputFiles.find((file) => /\.sgb$/i.test(file.name) && file.size===10112);
+			if(fileSGB){
+				const fileReaderSGB=new FileReader();
+				fileReaderSGB.onload=function(evt){
+					const file=new FileParser(this.result);
+					parseFileBorderSGB(file, false);
+				};	
+				fileReaderSGB.readAsArrayBuffer(fileSGB);
+			}else{
+				const binFiles=inputFiles.filter((file) => /\.bin$/i.test(file.name) && file.size%32===0);
+
+				if(binFiles.length!==0){
+					binFilesQueue=[];
+
+					binFiles.forEach((file) => {
+						const fileReader=new FileReader();
+						fileReader.onload=function(evt){
+							const fileParser=new FileParser(this.result, file.name);
+							binFilesQueue.push({type:guessFileBorder(fileParser), file:fileParser});
+							if(binFilesQueue.length===binFiles.length){
+								parseBinFilesQueue(false);
+							}
+						};
+						fileReader.readAsArrayBuffer(file);
+					});
+				}else{
+					Snackbar.show('Invalid file: must be a .sgb or .bin file with valid SGB border data', 'danger');
+				}
+			}
+		}
+	});
+	
+	$('#input-color0, #input-color1, #input-color2, #input-color3').on('click', function(evt){
+		evt.stopPropagation();
+		if(!currentFileData.palette){
+			currentFileData.palette=buildPaletteFromInputColors();
+			refreshCanvasBorder();
+			refreshPickerPalette();
+		}
+	});
+	$('#input-color0, #input-color1, #input-color2, #input-color3').on('change', function(){
+		if(currentFileData.palette){
+			var colorIndex=parseInt(this.id.replace('input-color',''));
+			var components=RGB24toComponents(this.value);
+			currentFileData.palette.colors[colorIndex]=new ColorRGB15(components.r, components.g, components.b);
+			refreshCanvasBorder();
+			refreshPickerPalette();
+		}
+	});
+
+	$('#btn-custom-border').on('click', function(evt){
+		document.getElementById('input-file-border').click();
+	});
+	$('#btn-build').on('click', buildROM);
+
+
+	refreshPickerPalette();
+});
+
+
+
+
+
+
+
+function refreshBuildButton(){
+	const validBorder=currentFileData.border.data.map && currentFileData.border.data.tiles && currentFileData.border.data.palettes;
+	const validRom=currentFileData.rom;
+
+	document.getElementById('btn-build').disabled=!(validRom && validBorder);
+}
+function refreshCanvasBorder(){
+	const map=currentFileData.border.data.map?._snes;
+	const tiles=currentFileData.border.data.tiles?._snes;
+	const palettes=currentFileData.border.data.palettes?._snes;
+
+	if(map && tiles && palettes){
+		const dmgPalette=currentFileData.palette || SGB_DEFAULT_PALETTE;
+		document.getElementById('canvas-preview').getContext('2d').putImageData(EXAMPLE_GB_MAP_DATA.toImageData(EXAMPLE_GB_TILE_DATA, [dmgPalette]), 48, 40);
+		
+		const tempCanvas=document.createElement('canvas');
+		tempCanvas.width=256;
+		tempCanvas.height=224;
+		tempCanvas.getContext('2d').putImageData(map.toImageData(tiles, palettes, true), 0, 0);
+		document.getElementById('canvas-preview').getContext('2d').drawImage(tempCanvas, 0, 0);
+
+		document.getElementById('picker-border').className='picker picker-ok';
+		document.getElementById('picker-title-border').innerHTML='';
+		if(currentFileData.border.data.fromGallery)
+			document.getElementById('picker-title-border').appendChild(getBorderDescription(currentFileData.border.data.fromGallery));
+		else
+			document.getElementById('picker-title-border').innerHTML='Custom';
+		document.getElementById('picker-check-border').title='Border info: '+tiles.length+' tiles, '+palettes.length+' palettes';
+		if(palettes.length===4)
+			document.getElementById('picker-check-border').title+=' (might show up incorrectly in real hardware)';
+	}
+	refreshBuildButton();
+}
+function refreshPickerPalette(){
+	const dmgPalette=currentFileData.palette || SGB_DEFAULT_PALETTE;
+
+	document.getElementById('palette-color0').style.backgroundColor=componentsToRGB24(dmgPalette.colors[0]);
+	document.getElementById('palette-color1').style.backgroundColor=componentsToRGB24(dmgPalette.colors[1]);
+	document.getElementById('palette-color2').style.backgroundColor=componentsToRGB24(dmgPalette.colors[2]);
+	document.getElementById('palette-color3').style.backgroundColor=componentsToRGB24(dmgPalette.colors[3]);
+	document.getElementById('picker-title-palette').innerText=currentFileData.palette? 'Yes':'No';
+	document.getElementById('picker-palette').className=currentFileData.palette? 'picker picker-ok':'picker';
 }
 
 
 
 
-$(document).ready((evt) => {	
-	/* UI events */
-	$('#picker-rom').on('click', (evt) => {
-		$('#input-file-rom').trigger('click');
-	});
-	$('#picker-border-map').on('click', (evt) => {
-		$('#input-file-border-map').trigger('click');
-	});
-	$('#picker-border-tiles').on('click', (evt) => {
-		$('#input-file-border-tiles').trigger('click');
-	});
-	$('#picker-border-palettes').on('click', (evt) => {
-		$('#input-file-border-palettes').trigger('click');
-	});
-
-	$('#input-file-rom').on('change', function(evt) {
-		if(this.files && this.files.length){
-			var fr=new FileReader();
-			fr.onload=function(evt){
-				checkFileRom(new FileParser(this.result));
-			};
-			fr.readAsArrayBuffer(this.files[0]);
-			currentRomName=this.files[0].name;
-		}
-	});
-	$('#input-file-border-map').on('change', function(evt) {
-		if(this.files && this.files.length){
-			var fr=new FileReader();
-			fr.onload=function(evt){
-				var file=new FileParser(this.result);
-				if(file.length()===10112){
-					checkFileSGB(file);
-				}else{
-					checkFileBorderMap(file);
-				}
-			};	
-			fr.readAsArrayBuffer(this.files[0]);
-		}
-	});
-	$('#input-file-border-tiles').on('change', function(evt) {
-		if(this.files && this.files.length){
-			var fr=new FileReader();
-			fr.onload=function(evt){
-				var file=new FileParser(this.result);
-				if(file.length()===10112){
-					checkFileSGB(file);
-				}else{
-					checkFileBorderTiles(file);
-				}
-			};	
-			fr.readAsArrayBuffer(this.files[0]);
-		}
-	});
-	$('#input-file-border-palettes').on('change', function(evt) {
-		if(this.files && this.files.length){
-			var fr=new FileReader();
-			fr.onload=function(evt){
-				var file=new FileParser(this.result);
-				if(file.length()===10112){
-					checkFileSGB(file);
-				}else{
-					checkFileBorderPalettes(file);
-				}
-			};	
-			fr.readAsArrayBuffer(this.files[0]);
-		}
-	});
-	$('#picker-status-custom-gb-palette').on('click', function(evt) {
-		var newValue=!pickerStatus['custom-gb-palette'];
-		if(newValue){
-			newValue=new PaletteGB(4);
-			for(var i=0; i<4; i++){
-				var components=RGB24toComponents($('#input-color'+i).val());
-				newValue.colors[i]=new ColorRGB15(components.r, components.g, components.b);
-			}
-		}
-		setPickerStatus('custom-gb-palette', newValue, null);
-	});
-	
-	$('#input-color0, #input-color1, #input-color2, #input-color3').on('change', function(){
-		if(pickerStatus['custom-gb-palette']){
-			var colorIndex=parseInt(this.id.replace('input-color',''));
-			var components=RGB24toComponents(this.value);
-			pickerStatus['custom-gb-palette'].colors[colorIndex]=new ColorRGB15(components.r, components.g, components.b);
-			refreshAside();
-		}else{
-			$('#picker-status-custom-gb-palette').trigger('click');
-		}
-	});
-
-	$('#btn-build').on('click', buildROM);
-});
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function componentsToRGB24(color){
+	return '#'+
+		('0'+color.r8.toString(16)).slice(-2)+
+		('0'+color.g8.toString(16)).slice(-2)+
+		('0'+color.b8.toString(16)).slice(-2);
+}
 function RGB24toComponents(rgb24){
 	return{
 		r:parseInt(rgb24.substr(1, 2), 16),
@@ -149,26 +428,6 @@ function RGB24toComponents(rgb24){
 	}
 }
 
-function refreshAside(){
-	var validBorder=pickerStatus['border-map'] && pickerStatus['border-tiles'] && pickerStatus['border-palettes'];
-	var validRom=pickerStatus['rom'];
-	var valid=validRom && validBorder;
-
-	$('#btn-build').prop('disabled', !valid);
-	if(validBorder){
-		var map=pickerStatus['border-map'];
-		var tiles=pickerStatus['border-tiles'];
-		var palettes=pickerStatus['border-palettes'];
-		var dmgPalette=pickerStatus['custom-gb-palette'] || SGB_DEFAULT_PALETTE;
-		document.getElementById('canvas-preview').getContext('2d').putImageData(EXAMPLE_GB_MAP_DATA.toImageData(EXAMPLE_GB_TILE_DATA, [dmgPalette]), 48, 40);
-		
-		var tempCanvas=document.createElement('canvas');
-		tempCanvas.width=256;
-		tempCanvas.height=224;
-		tempCanvas.getContext('2d').putImageData(map.toImageData(tiles, palettes, true), 0, 0);
-		document.getElementById('canvas-preview').getContext('2d').drawImage(tempCanvas, 0, 0);
-	}
-}
 
 const CARTRIDGE_TYPES=[
 	{supported:true, id:0x00, mbc:0, title:'ROM (no MBC)'},
@@ -216,18 +475,16 @@ const CARTRIDGE_SIZES=[
 */
 
 
-function checkFileRom(file){
-	var result={
-		supported:false,
-		title:'Invalid or incompatible Game Boy ROM',
-		mbc:0,
-		banks: 0
+const getGameBoyRomInfo=function(file){
+	const result={
+		success:false,
+		message:'Invalid or incompatible Game Boy ROM',
 	}
 
 	try{
 		//check Nintendo header
 		file.seek(0x0104);
-		var headerXor=file.readBytes(48).reduce(function(acc, current){
+		const headerXor=file.readBytes(48).reduce(function(acc, current){
 			return acc ^ current;
 		}, 0x00);
 		if(headerXor!==0x86){
@@ -236,8 +493,8 @@ function checkFileRom(file){
 
 		//get cartridge type and size
 		file.seek(0x0147);
-		var byteType=file.readByte();
-		var byteSize=file.readByte();
+		const byteType=file.readByte();
+		const byteSize=file.readByte();
 		
 		var nBanks;
 		if(byteSize<=8){
@@ -248,102 +505,196 @@ function checkFileRom(file){
 			nBanks=0;
 		}
 
-		for(var i=0; i<CARTRIDGE_TYPES.length; i++){
-			if(CARTRIDGE_TYPES[i].id===byteType){
-				result.id=CARTRIDGE_TYPES[i].id;
-				result.supported=CARTRIDGE_TYPES[i].supported;
-				result.mbc=CARTRIDGE_TYPES[i].mbc;
-				result.title=CARTRIDGE_TYPES[i].title;
-				result.banks=nBanks;
-				break;
-			}
-		}
+		const cartridgeType=CARTRIDGE_TYPES.find((cartridgeType) => cartridgeType.id===byteType);
+		if(!cartridgeType)
+			throw new Error('Unsupported cartridge');
 
-		var message=result.title;
-		if(!result.supported){
-			throw new Error(message);
-		}
-		currentRomType=result;
+		result.success=cartridgeType.supported;
+		currentFileData.romType=cartridgeType;
+		currentFileData.romType.banks=nBanks;
+
 
 		var fileSize=nBanks*16384;
 		if((fileSize / 1048576) < 1)
 			fileSize=(fileSize/1024)+'KB';
 		else
 			fileSize=(fileSize/1048576)+'MB';
-		message+=' - '+fileSize+' ('+nBanks+' banks)';
-		
-		
-		$('#picker-title-rom').html(currentRomName);
+		result.message=currentFileData.romType.title+' - '+fileSize+' ('+nBanks+' banks)';
 
-		setPickerStatus('rom', file, message);
 	}catch(err){
-		setPickerStatus('rom', false, err.message);
+		result.message=err.message;
+		result.success=false;
 	}
+
+	return result;
 }
-function checkFileBorderMap(file){
-	try{
-		if(file.length()!==1792)
-			throw new Error('invalid size (must be 1792 bytes)');
 
-		/* import map */
-		var map=MapSNES.import(file.toArray(), 32, 28);
-		bufferedFiles.borderMap=file;
 
-		setPickerStatus('border-map', map, 'Valid 32&times;28 tile map');
-	}catch(err){
-		setPickerStatus('border-map', false, 'Invalid file: '+err.message);
-	}
-}
-function checkFileBorderTiles(file){
-	try{
-		if(file.length()%32!==0)
-			throw new Error('invalid size (must be divisible by 32)');
 
-		var nTiles=file.length()/32;
-		if(nTiles>256)
-			throw new Error('more than 256 tiles');
 
-		/* import tiles */
-		var tiles=new Array(file.length() / 32);
-		for(var i=0; i<tiles.length; i++){
-			tiles[i]=Tile4BPP.import(file.readBytes(32));
+function fetchBorder(border){
+	fetch('./web-injector/assets/border-gallery/'+border.id+'.sgb').then((response) => {
+		if(response.ok){
+			response.arrayBuffer().then((arrayBuffer) => {
+				const file=new FileParser(arrayBuffer, border.id+'.sgb');
+				if(border.palette){
+					document.getElementById('input-color0').value=border.palette[0];
+					document.getElementById('input-color1').value=border.palette[1];
+					document.getElementById('input-color2').value=border.palette[2];
+					document.getElementById('input-color3').value=border.palette[3];
+					currentFileData.palette=buildPaletteFromInputColors();
+					refreshPickerPalette();
+				}
+				parseFileBorderSGB(file, border);
+			});
 		}
-		bufferedFiles.borderTiles=file;
-
-		setPickerStatus('border-tiles', tiles, nTiles+' tiles');
-	}catch(err){
-		setPickerStatus('border-tiles', false, 'Invalid file: '+err.message);
-	}
+	});
 }
-function checkFileBorderPalettes(file){
-	try{
-		if(file.length()%32!==0)
-			throw new Error('invalid size (must be divisible by 32)');
 
-		var nPalettes=file.length()/32;
-		if(nPalettes>4)
-			throw new Error('more than 4 palettes');
+function guessFileBorder(file){
+	if(file.length()===1792){ //could be: tiles or map
+		file.seek(0);
+		while(!file.isEOF()){
+			file.readByte(); //posible tile byte
+			const possibleTileAttributes=file.readByte();
 
-		/* import palettes */
-		var palettes=new Array(file.length() / 32);
-		for(var i=0; i<palettes.length; i++){
-			palettes[i]=PaletteSNES.import(file.readWords(16));
+			if(possibleTileAttributes & 0b00000011){ //any bits but flips or palette index
+				return 'tiles';
+			}
 		}
-		bufferedFiles.borderPalettes=file;
+		//it's probably map, but could be tile data in VERY rare cases (56 tiles, none of them have bits 2-5 set)
+		//try to guess by filename
+		if(/[^A-Za-z]tiles/i.test(file.name))
+			return 'tiles';
+		//it's very unlikely it won't be a map file
+		return 'map'; 
 
-		if(nPalettes===4)
-			setPickerStatus('border-palettes', palettes, palettes.length+' palettes (might show up incorrectly in real hardware)');
-		else
-			setPickerStatus('border-palettes', palettes, palettes.length+' palettes');
-	}catch(err){
-		setPickerStatus('border-palettes', false, 'Invalid file: '+err.message);
+	}else if(file.length()===32 || file.length()===64 || file.length()===96 || file.length()===128){ //could be: tiles or palettes
+		file.seek(0);
+		while(!file.isEOF()){
+			file.readByte(); //posible first color byte
+			const possibleSecondColorByte=file.readByte();
+
+			if(possibleSecondColorByte & 0b10000000){ //any bits but 15th bit
+				return 'tiles';
+			}
+		}
+		//it's probably palettes, but could be palette data in VERY rare cases (2, 4, 8 or 16 tiles, no colors with 15th bit set)
+		//try to guess by filename
+		if(/[^A-Za-z]tiles/i.test(file.name))
+			return 'tiles';
+		//it's very unlikely it won't be a palette file
+		return 'palettes';
+	}else{ //is tiles
+		return 'tiles';
 	}
 }
-function checkFileSGB(file){
-	checkFileBorderTiles(file.slice(0x0000, 256*32));
-	checkFileBorderMap(file.slice(0x2000, 32*28*2));
-	checkFileBorderPalettes(file.slice(0x2700, 16*2*4));
+function parseBinFilesQueue(fromGallery){
+	const isCustom=!fromGallery;
+	const fileMap=binFilesQueue.find((file) => file.type==='map')?.file;
+	if(fileMap){
+		try{
+			/* check file validity */
+			if(fileMap.length()!==1792)
+				throw new Error('invalid size (must be 1792 bytes)');
+			fileMap.seek(0);
+			while(!fileMap.isEOF()){
+				fileMap.readByte();
+				const tileAttributes=fileMap.readByte();
+	
+				if(tileAttributes & 0b00000011)
+					throw new Error('Invalid tile attributes (bits 0-1 must be 0)');
+			}
+
+			/* import map */
+			currentFileData.border.tempData.map=fileMap;
+
+			if(isCustom)
+				refreshTempDataLog();
+		}catch(err){
+			Snackbar.show('Invalid border map file: '+err.message, 'danger');
+		}
+	}
+	const fileTiles=binFilesQueue.find((file) => file.type==='tiles')?.file;
+	if(fileTiles){
+		try{
+			/* check file validity */
+			if(fileTiles.length()%32!==0)
+				throw new Error('invalid size (must be divisible by 32)');
+			else if((fileTiles.length()/32)>256)
+				throw new Error('more than 256 tiles');
+
+			/* import tiles */
+			currentFileData.border.tempData.tiles=fileTiles;
+
+			if(isCustom)
+				refreshTempDataLog();
+		}catch(err){
+			Snackbar.show('Invalid border tiles file: '+err.message, 'danger');
+		}
+	}
+	const filePalettes=binFilesQueue.find((file) => file.type==='palettes')?.file;
+	if(filePalettes){
+		try{
+			/* check file validity */
+			if(filePalettes.length()!==32 && filePalettes.length()!==64 && filePalettes.length()!==96 && filePalettes.length()!==128)
+				throw new Error('invalid size (must be 32, 64, 96 or 128)');
+			filePalettes.seek(0);
+			while(!filePalettes.isEOF()){
+				const rgb15=filePalettes.readWord();
+				if(rgb15 & 0x8000)
+					throw new Error('invalid color found');
+			}
+
+			/* import palettes */
+			currentFileData.border.tempData.palettes=filePalettes;
+
+			if(isCustom)
+				refreshTempDataLog();
+		}catch(err){
+			Snackbar.show('Invalid border palettes file: '+err.message, 'danger');
+		}
+	}
+
+	if(currentFileData.border.tempData.map && currentFileData.border.tempData.tiles && currentFileData.border.tempData.palettes){
+		currentFileData.border.data.map=currentFileData.border.tempData.map;
+		currentFileData.border.data.tiles=currentFileData.border.tempData.tiles;
+		currentFileData.border.data.palettes=currentFileData.border.tempData.palettes;
+		currentFileData.border.data.fromGallery=fromGallery;
+	
+		/* generate SNES objects for preview purposes */
+		currentFileData.border.data.map._snes=MapSNES.import(currentFileData.border.tempData.map.toArray(), 32, 28);
+		currentFileData.border.data.tiles._snes=new Array(currentFileData.border.tempData.tiles.length() / 32);
+		currentFileData.border.data.tiles.seek(0);
+		for(var i=0; i<currentFileData.border.data.tiles._snes.length; i++){
+			currentFileData.border.data.tiles._snes[i]=Tile4BPP.import(currentFileData.border.data.tiles.readBytes(32));
+		}
+		currentFileData.border.data.palettes._snes=new Array(currentFileData.border.tempData.palettes.length() / 32);
+		currentFileData.border.data.palettes.seek(0);
+		var paletteIndex=0;
+		while(!currentFileData.border.data.palettes.isEOF()){
+			currentFileData.border.data.palettes._snes[paletteIndex++]=PaletteSNES.import(currentFileData.border.data.palettes.readWords(16));
+		}
+
+		document.getElementById('dialog-borders').close();
+		refreshCanvasBorder();
+	}
 }
+function parseFileBorderSGB(file, fromGallery){
+	const mapFile=file.slice(0x2000, 32*28*2);
+
+	const tempMap=MapSNES.import(mapFile.toArray(), 32, 28);
+	const nTiles=tempMap.getMaxTileIndex();
+	const nPalettes=tempMap.getMaxPaletteIndex();
+
+	binFilesQueue=[
+		{type:'map', file:mapFile},
+		{type:'tiles', file:file.slice(0x0000, nTiles*32)},
+		{type:'palettes', file:file.slice(0x2700, 16*2*nPalettes)}
+	];
+	parseBinFilesQueue(fromGallery);
+}
+
 
 
 
@@ -393,17 +744,17 @@ function findFreeSpace(rom, assembledHookInfo){
 
 
 function buildROM(){
-	var rom=pickerStatus['rom'].slice();
+	var rom=currentFileData.rom.slice();
 
 	try{
 		//add MBC to ROM if needed
-		if(!currentRomType.mbc){
+		if(!currentFileData.romType.mbc){
 			rom.seek(0x0147)
-			if(currentRomType.id===0x00){ //ROM
+			if(currentFileData.romType.id===0x00){ //ROM
 				rom.writeByte(0x01);
-			}else if(currentRomType.id===0x08){ //ROM + RAM
+			}else if(currentFileData.romType.id===0x08){ //ROM + RAM
 				rom.writeByte(0x02);
-			}else if(currentRomType.id===0x09){ //ROM + RAM + Battery
+			}else if(currentFileData.romType.id===0x09){ //ROM + RAM + Battery
 				rom.writeByte(0x03);
 			}
 		}
@@ -499,7 +850,7 @@ function buildROM(){
 
 
 		var assembledHookInfo;
-		if(currentRomType.mbc===1 && freeBankX>=0x20){
+		if(currentFileData.romType.mbc===1 && freeBankX>=0x20){
 			console.log('using assembled code for MBC1+ROM bigger than 1MB');
 			if(freeBankX===0x20 || freeBankX===0x40 || freeBankX===0x60){
 				//banks $20, $40, $60 need additional code to be accesed
@@ -508,7 +859,7 @@ function buildROM(){
 			}
 
 			assembledHookInfo=getAssembledHookInfo('mbc1_extra');
-		}else if(currentRomType.mbc===2){
+		}else if(currentFileData.romType.mbc===2){
 			assembledHookInfo=getAssembledHookInfo('mbc2');
 		}else{
 			assembledHookInfo=getAssembledHookInfo('default');
@@ -629,15 +980,15 @@ function buildROM(){
 		}
 		
 		//disable custom GB palette by nopping call sgb_packet_transfer
-		if(!pickerStatus['custom-gb-palette']){
+		if(!currentFileData.palette){
 			rom.seek(freeBankX * 0x4000 + SGB_INIT_CUSTOM_PALETTE_CODE_OFFSET);
 			rom.writeBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]); //nops
 		}
 
 		//write data: border map+palettes
 		rom.seek(freeBankX * 0x4000 + (0x5300 - 0x4000));
-		rom.writeBytes(bufferedFiles.borderMap.toArray());
-		const row28=bufferedFiles.borderMap.slice(27*32 * 2, 32*2).toArray();
+		rom.writeBytes(currentFileData.border.data.map.toArray());
+		const row28=currentFileData.border.data.map.slice(27*32 * 2, 32*2).toArray();
 		for(var i=0; i<64; i+=2){
 			row28[i + 1]=row28[i + 1] ^ 0b00000010; //row 28:clone latest row and flip it vertically to avoid scanline flickering
 		}
@@ -645,15 +996,15 @@ function buildROM(){
 		for(var i=0; i<32*2*3; i++){
 			rom.writeByte(0x00); //rows 29-31
 		}
-		rom.writeBytes(bufferedFiles.borderPalettes.toArray());
+		rom.writeBytes(currentFileData.border.data.palettes.toArray());
 
 		//write data: border tileset
 		rom.seek(freeBankX * 0x4000 + (0x5c00 - 0x4000));
-		rom.writeBytes(bufferedFiles.borderTiles.toArray());
+		rom.writeBytes(currentFileData.border.data.tiles.toArray());
 
 		//write data: game screen palettes
 		rom.seek(freeBankX * 0x4000 + (0x7c00 - 0x4000));
-		rom.writeWords((pickerStatus['custom-gb-palette'] || SGB_DEFAULT_PALETTE).export());
+		rom.writeWords((currentFileData.palette || SGB_DEFAULT_PALETTE).export());
 
 		// calculate and fix checksums
 		var newChecksum=0x00;
@@ -678,13 +1029,13 @@ function buildROM(){
 		rom.writeByte(newChecksum & 0xff);
 
 
-		var newRomName=currentRomName.replace(/\.(gbc?)$/, ' (SGB Enhanced).$1');
+		var newRomName=currentFileData.rom.name.replace(/\.(gbc?)$/, ' (SGB Enhanced).$1');
 		var blob=new Blob([rom.getBuffer()], {type: 'application/octet-stream'});
 		saveAs(blob, newRomName);
 
 
 
 	}catch(err){
-		setPickerStatus('rom', false, 'Incompatible ROM: '+err.message);
+		Snackbar.show('Incompatible ROM: '+err.message, 'danger');
 	}
 }

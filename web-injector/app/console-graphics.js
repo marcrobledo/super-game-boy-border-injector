@@ -2,7 +2,7 @@
 	These classes represent different videogame console's 8x8 tiles data, maps and palettes
 	to be used in future apps :-P
 	
-	by Marc Robledo 2022-2024
+	by Marc Robledo 2022-2025
 */
 
 class Palette{
@@ -295,6 +295,14 @@ class Map{
 		}else{
 			return this._attributes[y * this._width + x];
 		}
+	}
+	getMaxTileIndex(){
+		return Math.max(...this._tileIndexes) + 1;
+	}
+	getMaxPaletteIndex(){
+		return Math.max(...this._attributes.map((attr) => {
+			return this.constructor.parseAttributeByte(attr).paletteIndex;
+		})) + 1;
 	}
 
 	toImageData(tiles, palettes, transparent = false){

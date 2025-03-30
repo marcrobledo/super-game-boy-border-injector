@@ -1,4 +1,4 @@
-export const ASSEMBLED_HOOK_INFO=[
+const ASSEMBLED_HOOK_INFO=[
 	//common case
 	{
 		id:'default',
