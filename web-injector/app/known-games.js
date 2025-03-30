@@ -23,6 +23,17 @@ export const KNOWN_GAMES=[
 		globalChecksum:0xd9cf,
 		safeOffset:0x39d9
 	},
+	{
+		title:'Smurfs, The (Europe) (En,Fr,De,Es)',
+		globalChecksum:0xdd63,
+		safeOffset:0x004b
+	},
+	{
+		title:'Smurfs, The (USA, Europe) (En,Fr,De) (Rev 1) (SGB Enhanced)',
+		globalChecksum:0xdca9,
+		safeOffset:0x004b,
+		nops:[bankOffset(0x02, 0x7e45) /* CHR_TRN(1) */, bankOffset(0x02, 0x7eaa) /* PCT_TRN */]
+	},
 
 
 
