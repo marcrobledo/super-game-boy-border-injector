@@ -55,6 +55,14 @@ export const BORDER_GALLERY=[
         url:'https://www.marcrobledo.com'
     },
 
+    {
+        id:'peachflavored_ninja_gaiden_shadow',
+        matches:['ninja gaiden', 'shadow warriors', 'ninja ryuuken Den'],
+        name:'Ninja Gaiden: Shadow Warriors',
+        author:'peachflavored',
+        url:'https://x.com/peachflavor3d'
+    },
+
     /* extracted from official SGB games */
     {id:'extracted_tetris_attack_baby_yoshi', name:'Baby Yoshi (Tetris Attack)', author:'Nintendo'},
     {id:'extracted_namco_gallery_dig_dug', name:'Dig Dug (Namco Gallery)', author:'Namco'},
