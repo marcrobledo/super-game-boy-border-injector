@@ -62,6 +62,13 @@ export const BORDER_GALLERY=[
         author:'peachflavored',
         url:'https://x.com/peachflavor3d'
     },
+    {
+        id:'angrysonics_bubsy_2_eygpt',
+        matches:['bubsy', 'bubsy ii', 'bubsy 2'],
+        name:'Bubsy II (Eygpt)',
+        author:'AngrySonics',
+        url:'https://bsky.app/profile/angrysonics.bsky.social'
+    },
 
     /* extracted from official SGB games */
     {id:'extracted_tetris_attack_baby_yoshi', name:'Baby Yoshi (Tetris Attack)', author:'Nintendo'},
