@@ -1,90 +1,107 @@
 export const BORDER_GALLERY=[
-    {
-        id:'toruzz_super_mario_land',
-        matches:['super mario land', 'sml'],
-        name:'Super Mario Land',
-        author:'toruzz',
-        url:'https://toruzz.com'
-    },
-    {
-        id:'toruzz_super_mario_land_2',
-        matches:['super mario land 2', 'sml2'],
-        name:'Super Mario Land 2',
-        author:'toruzz',
-        url:'https://toruzz.com'
-    },
-    {
-        id:'kensuyjin33_kid_dracula',
-        matches:['kid dracula', 'dracula kun'],
-        name:'Kid Dracula',
-        author:'Kensu William',
-        url:'https://x.com/kensuyjin_33',
-        palette:[
-            '#fceaf6',
-            '#34b7a1',
-            '#5d2bb2',
-            '#000000'
-        ]
-    },
-    
-    
-    
-    {
-        id:'plunskas_catrap',
-        matches:['catrap', 'pitman'],
-        name:'Catrap / Pitman',
-        author:'Plunskas',
-        url:'https://bsky.app/profile/plunskas.bsky.social'
-    },
-    
-    
-    
-    {
-        id:'ryallasha_nvetay_metroid_2',
-        matches:['metroid 2', 'samus'],
-        name:'Metroid II: Return of Samus',
-        author:'Ryallasha N\'vetay',
-        url:'https://bsky.app/profile/ryallashanvetay.bsky.social'
-    },
+	{
+		id:'toruzz_super_mario_land',
+		matches:['super mario land', 'sml'],
+		name:'Super Mario Land',
+		author:'toruzz',
+		url:'https://toruzz.com'
+	},
+	{
+		id:'toruzz_super_mario_land_2',
+		matches:['super mario land 2', 'sml2'],
+		name:'Super Mario Land 2',
+		author:'toruzz',
+		url:'https://toruzz.com'
+	},
+	{
+		id:'kensuyjin33_kid_dracula',
+		matches:['kid dracula', 'dracula kun'],
+		name:'Kid Dracula',
+		author:'Kensu William',
+		url:'https://x.com/kensuyjin_33',
+		palette:[
+			'#fceaf6',
+			'#34b7a1',
+			'#5d2bb2',
+			'#000000'
+		]
+	},
+	
+	
+	
+	{
+		id:'plunskas_catrap',
+		matches:['catrap', 'pitman'],
+		name:'Catrap / Pitman',
+		author:'Plunskas',
+		url:'https://bsky.app/profile/plunskas.bsky.social'
+	},
+	
+	
+	
+	{
+		id:'ryallasha_nvetay_metroid_2',
+		matches:['metroid 2', 'samus'],
+		name:'Metroid II: Return of Samus',
+		author:'Ryallasha N\'vetay',
+		url:'https://bsky.app/profile/ryallashanvetay.bsky.social'
+	},
 
-    {
-        id:'marc_max_smurfs',
-        matches:['smurfs', 'pitufos'],
-        name:'The Smurfs',
-        author:'Marc',
-        url:'https://www.marcrobledo.com'
-    },
+	{
+		id:'marc_max_smurfs',
+		matches:['smurfs', 'pitufos'],
+		name:'The Smurfs',
+		author:'Marc',
+		url:'https://www.marcrobledo.com'
+	},
 
-    {
-        id:'peachflavored_ninja_gaiden_shadow',
-        matches:['ninja gaiden', 'shadow warriors', 'ninja ryuuken Den'],
-        name:'Ninja Gaiden: Shadow Warriors',
-        author:'peachflavored',
-        url:'https://x.com/peachflavor3d'
-    },
-    {
-        id:'angrysonics_bubsy_2_eygpt',
-        matches:['bubsy', 'bubsy ii', 'bubsy 2'],
-        name:'Bubsy II (Eygpt)',
-        author:'AngrySonics',
-        url:'https://bsky.app/profile/angrysonics.bsky.social'
-    },
+	{
+		id:'peachflavored_ninja_gaiden_shadow',
+		matches:['ninja gaiden', 'shadow warriors', 'ninja ryuuken Den'],
+		name:'Ninja Gaiden: Shadow Warriors',
+		author:'peachflavored',
+		url:'https://x.com/peachflavor3d'
+	},
+	{
+		id:'peachflavored_probotector',
+		matches:['probotector'],
+		name:'Probotector',
+		author:'peachflavored',
+		url:'https://x.com/peachflavor3d'
+	},
+	{
+		id:'angrysonics_bubsy_2_eygpt',
+		matches:['bubsy', 'bubsy ii', 'bubsy 2'],
+		name:'Bubsy II (Eygpt)',
+		author:'AngrySonics',
+		url:'https://bsky.app/profile/angrysonics.bsky.social'
+	},
+	{
+		id:'ricardo_mela_sagaia',
+		matches:['sagaia'],
+		name:'Sagaia',
+		author:'ricardo-mela'
+	},
 
-    /* extracted from official SGB games */
-    {id:'extracted_tetris_attack_baby_yoshi', name:'Baby Yoshi (Tetris Attack)', author:'Nintendo'},
-    {id:'extracted_namco_gallery_dig_dug', name:'Dig Dug (Namco Gallery)', author:'Namco'},
-    {id:'extracted_namco_gallery_mappy', name:'Mappy (Namco Gallery)', author:'Namco'},
+	/* extracted from official SGB games */
+	{id:'extracted_tetris_attack_baby_yoshi', name:'Baby Yoshi (Tetris Attack)', author:'Nintendo'},
+	{id:'extracted_namco_gallery_dig_dug', name:'Dig Dug (Namco Gallery)', author:'Namco'},
+	{id:'extracted_namco_gallery_mappy', name:'Mappy (Namco Gallery)', author:'Namco'},
 
-    {group:'extracted_sgb_landscape', id:'extracted_sgb_landscape0', name:'SGB Landscape (morning)', author:'Nintendo'},
-    {group:'extracted_sgb_landscape', id:'extracted_sgb_landscape1', name:'SGB Landscape (sunset)', author:'Nintendo'},
-    {group:'extracted_sgb_landscape', id:'extracted_sgb_landscape2', name:'SGB Landscape (night)', author:'Nintendo'},
-    {group:'extracted_sgb_landscape', id:'extracted_sgb_landscape3', name:'SGB Landscape (dawn)', author:'Nintendo'},
+	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape0', name:'SGB Landscape (morning)', author:'Nintendo'},
+	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape1', name:'SGB Landscape (sunset)', author:'Nintendo'},
+	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape2', name:'SGB Landscape (night)', author:'Nintendo'},
+	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape3', name:'SGB Landscape (dawn)', author:'Nintendo'},
 
-    {group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket0', name:'GB Pocket (grey)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
-    {group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket1', name:'GB Pocket (green)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
-    {group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket2', name:'GB Pocket (red)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
-    {group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket3', name:'GB Pocket (yellow)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
-    {group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket4', name:'GB Pocket (black)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']}
+	{group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket0', name:'GB Pocket (grey)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
+	{group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket1', name:'GB Pocket (green)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
+	{group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket2', name:'GB Pocket (red)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
+	{group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket3', name:'GB Pocket (yellow)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
+	{group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket4', name:'GB Pocket (black)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
+
+	/* custom GB based borders */
+	{id:'tvsmrneil_gbl', name:'GB Light', author:'TVsMrNeil'},
+	{id:'tvsmrneil_gbc', name:'GB Color', author:'TVsMrNeil'}
 ];
 
 
