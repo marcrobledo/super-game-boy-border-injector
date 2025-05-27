@@ -56,8 +56,22 @@ export const BORDER_GALLERY=[
 	},
 
 	{
+		id:'pernom_ducktales_2',
+		matches:['ducktales', 'duck tales'],
+		name:'Ducktales',
+		author:'pernom',
+		url:'https://x.com/gaaradark_'
+	},
+	{
+		id:'pernom_nintendo_world_cup',
+		matches:['nintendo world cup', 'soccer', 'fifa'],
+		name:'Nintendo World Cup',
+		author:'pernom',
+		url:'https://x.com/gaaradark_'
+	},
+	{
 		id:'peachflavored_ninja_gaiden_shadow',
-		matches:['ninja gaiden', 'shadow warriors', 'ninja ryuuken Den'],
+		matches:['ninja gaiden', 'shadow warriors', 'ninja ryuuken den'],
 		name:'Ninja Gaiden: Shadow Warriors',
 		author:'peachflavored',
 		url:'https://x.com/peachflavor3d'
