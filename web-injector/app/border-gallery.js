@@ -96,11 +96,68 @@ export const BORDER_GALLERY=[
 		name:'Sagaia',
 		author:'ricardo-mela'
 	},
+	{
+		id:'tvsmrneil_burgertime_deluxe',
+		matches:['burger time', 'burgertime'],
+		name:'BurgerTime Deluxe',
+		author:'TVsMrNeil'
+	},
+	{
+		id:'tvsmrneil_shadowgate_classic',
+		matches:['shadow gate', 'shadowgate'],
+		name:'Shadowgate Classic',
+		author:'TVsMrNeil'
+	},
+	{
+		id:'tvsmrneil_mario_golf',
+		matches:['mario golf'],
+		name:'Mario Golf',
+		author:'TVsMrNeil'
+	},
+	{
+		id:'tvsmrneil_mario_tennis',
+		matches:['mario tennis'],
+		name:'Mario Tennis',
+		author:'TVsMrNeil'
+	},
+	{
+		id:'tvsmrneil_jetsons_in_robot_panic',
+		matches:['jetsons'],
+		name:'Jetsons in Robot Panic',
+		author:'TVsMrNeil'
+	},
+	{
+		id:'tvsmrneil_ducktales',
+		matches:['ducktales', 'duck tales'],
+		name:'Ducktales',
+		author:'TVsMrNeil'
+	},
+	{
+		id:'tvsmrneil_pac_man',
+		matches:['pacman', 'pac man'],
+		name:'Pac-Man',
+		author:'TVsMrNeil'
+	},
+	{
+		id:'tvsmrneil_ms_pac_man',
+		matches:['ms pacman', 'ms pac man'],
+		name:'Pac-Man',
+		author:'TVsMrNeil'
+	},
+	{
+		id:'valtteams_space_time_star_beasts',
+		matches:['shi kong xing shou', 'space time star beasts'],
+		name:'Shi Kong Xing Shou (Space Time Star Beasts)',
+		author:'Valtteams'
+	},
 
 	/* extracted from official SGB games */
 	{id:'extracted_tetris_attack_baby_yoshi', name:'Baby Yoshi (Tetris Attack)', author:'Nintendo'},
 	{id:'extracted_namco_gallery_dig_dug', name:'Dig Dug (Namco Gallery)', author:'Namco'},
 	{id:'extracted_namco_gallery_mappy', name:'Mappy (Namco Gallery)', author:'Namco'},
+	{id:'extracted_namco_pac_in_time', name:'Pac-Man (Pac-In-Time)', author:'Namco'},
+	{id:'extracted_banpresto_detective_conan_the_mechanical_temple_murder_case', name:'Detective Conan: The Mechanical Temple Murder Case', author:'Banpresto (translated by TVsMrNeil)'},
+	{id:'extracted_banpresto_detective_conan_the_legendary_treasure_of_strange_rock_island', name:'Detective Conan: The Mechanical Temple Murder Case', author:'Banpresto (translated by TVsMrNeil)'},
 
 	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape0', name:'SGB Landscape (morning)', author:'Nintendo'},
 	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape1', name:'SGB Landscape (sunset)', author:'Nintendo'},
