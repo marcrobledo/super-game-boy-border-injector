@@ -56,9 +56,16 @@ export const BORDER_GALLERY=[
 	},
 
 	{
+		id:'pernom_wario_land',
+		matches:['wario land'],
+		name:'Wario Land',
+		author:'pernom',
+		url:'https://x.com/gaaradark_'
+	},
+	{
 		id:'pernom_ducktales_2',
 		matches:['ducktales', 'duck tales'],
-		name:'Ducktales',
+		name:'Ducktales 2',
 		author:'pernom',
 		url:'https://x.com/gaaradark_'
 	},
@@ -158,11 +165,13 @@ export const BORDER_GALLERY=[
 	{id:'extracted_namco_pac_in_time', name:'Pac-Man (Pac-In-Time)', author:'Namco'},
 	{id:'extracted_banpresto_detective_conan_the_mechanical_temple_murder_case', name:'Detective Conan: The Mechanical Temple Murder Case', author:'Banpresto (translated by TVsMrNeil)'},
 	{id:'extracted_banpresto_detective_conan_the_legendary_treasure_of_strange_rock_island', name:'Detective Conan: The Mechanical Temple Murder Case', author:'Banpresto (translated by TVsMrNeil)'},
+	{id:'extracted_hudson_bomberman_quest', name:'Bomberman Quest', author:'Hudson Soft'},
 
 	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape0', name:'SGB Landscape (morning)', author:'Nintendo'},
 	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape1', name:'SGB Landscape (sunset)', author:'Nintendo'},
 	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape2', name:'SGB Landscape (night)', author:'Nintendo'},
 	{group:'extracted_sgb_landscape', id:'extracted_sgb_landscape3', name:'SGB Landscape (dawn)', author:'Nintendo'},
+	{id:'extracted_sgb2_celebration', name:'SGB2 Celebration', author:'Nintendo'},
 
 	{group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket0', name:'GB Pocket (grey)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
 	{group:'extracted_picross_2_pocket', id:'extracted_picross_2_pocket1', name:'GB Pocket (green)', author:'Nintendo', palette:['#c4cfa1','#8b956d','#4d533c','#1f1f1f']},
