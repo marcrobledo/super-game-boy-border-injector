@@ -208,9 +208,9 @@ sgb_warmup:
 
 
 
-
 ; borrowed and adapted from https://github.com/nitro2k01/whichboot.gb/blob/d565e8b91ef4f54a9cc640e54e3a10f80673e577/common/code/sgb.asm#L54
 ; by nitro2k01, released under MIT license: https://raw.githubusercontent.com/nitro2k01/whichboot.gb/main/LICENSE
+; adaptation fixes Goomba Color compatibility (https://github.com/marcrobledo/super-game-boy-border-injector/issues/16)
 detect_sgb:
 	ld		hl, SGB_COMMAND_MULTIPLAYER_REQUEST
 	call	sgb_packet_transfer
@@ -222,25 +222,26 @@ detect_sgb:
 
 	ld		a, P1F_GET_DPAD
 	ldh		[rP1], a
-	push	af
-	pop		af
+	ldh		a, [rP1]
+	ldh		a, [rP1]
 	ld		a, P1F_GET_NONE
 	ldh		[rP1], a
 	ld		a, P1F_GET_BTN
 	ldh		[rP1], a
-	push	af
-	pop		af
-	push	af
-	pop		af
+	ldh		a, [rP1]
+	ldh		a, [rP1]
+	ldh		a, [rP1]
+	ldh		a, [rP1]
+	ldh		a, [rP1]
+	ldh		a, [rP1]
 	ld		a, P1F_GET_NONE
 	ldh		[rP1], a
-	push	af
-	pop		af
-	push	af
-	pop		af
+	ldh		a, [rP1]
+	ldh		a, [rP1]
+	ldh		a, [rP1]
 	ldh		a, [rP1]
 	and		%00000011
-	sub		$03
+	cp		$03
 	ret		z
 
 .sgb_detected:
