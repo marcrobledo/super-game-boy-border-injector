@@ -157,6 +157,25 @@ export const BORDER_GALLERY=[
 		name:'Shi Kong Xing Shou (Space Time Star Beasts)',
 		author:'Valtteams'
 	},
+	{
+		id:'mime64_final_fantasy_adventure',
+		matches:['final fantasy adventure'],
+		name:'Final Fantasy Adventure',
+		author:'mime64'
+	},
+	{
+		id:'marcdwyz_mega_man',
+		matches:['mega man', 'megaman', 'rockman'],
+		name:'Mega Man',
+		author:'MarcDWyz',
+		url:'https://bsky.app/profile/marcdwyz.bsky.social',
+		palette:[
+			'#ffe0af',
+			'#6f98ff',
+			'#af481f',
+			'#004000'
+		]
+	},
 
 	/* extracted from official SGB games */
 	{id:'extracted_tetris_attack_baby_yoshi', name:'Baby Yoshi (Tetris Attack)', author:'Nintendo'},
