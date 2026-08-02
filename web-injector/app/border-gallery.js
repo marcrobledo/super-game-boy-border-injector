@@ -164,6 +164,19 @@ export const BORDER_GALLERY=[
 		author:'mime64'
 	},
 	{
+		id:'marcdwyz_mega_man_3',
+		matches:['mega man 3', 'megaman 3', 'mega man iii', 'megaman iii', 'rockman world 3', 'mega man world 3', 'megaman world 3'],
+		name:'Mega Man III',
+		author:'MarcDWyz',
+		url:'https://bsky.app/profile/marcdwyz.bsky.social',
+		palette:[
+			'#ffe0af',
+			'#6f98ff',
+			'#af481f',
+			'#004000'
+		]
+	},
+	{
 		id:'marcdwyz_mega_man',
 		matches:['mega man', 'megaman', 'rockman'],
 		name:'Mega Man',
@@ -174,6 +187,32 @@ export const BORDER_GALLERY=[
 			'#6f98ff',
 			'#af481f',
 			'#004000'
+		]
+	},
+	{
+		id:'marcdwyz_kirby',
+		matches:['kirby'],
+		name:'Kirby',
+		author:'MarcDWyz',
+		url:'https://bsky.app/profile/marcdwyz.bsky.social',
+		palette:[
+			'#ffc0ff',
+			'#ef888f',
+			'#7f30ef',
+			'#2f289f'
+		]
+	},
+	{
+		id:'marcdwyz_kirby_night',
+		matches:['kirby'],
+		name:'Kirby (night)',
+		author:'MarcDWyz',
+		url:'https://bsky.app/profile/marcdwyz.bsky.social',
+		palette:[
+			'#ffc0ff',
+			'#ef888f',
+			'#7f30ef',
+			'#2f289f'
 		]
 	},
 
