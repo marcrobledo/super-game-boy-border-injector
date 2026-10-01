@@ -5,15 +5,13 @@ export const BORDER_GALLERY=[
 		name:'Super Mario Land',
 		author:'toruzz',
 		url:'https://toruzz.com'
-	},
-	{
+	}, {
 		id:'toruzz_super_mario_land_2',
 		matches:['super mario land 2', 'sml2'],
 		name:'Super Mario Land 2',
 		author:'toruzz',
 		url:'https://toruzz.com'
-	},
-	{
+	}, {
 		id:'kensuyjin33_kid_dracula',
 		matches:['kid dracula', 'dracula kun'],
 		name:'Kid Dracula',
@@ -61,35 +59,34 @@ export const BORDER_GALLERY=[
 		name:'Wario Land',
 		author:'pernom',
 		url:'https://x.com/gaaradark_'
-	},
-	{
+	}, {
 		id:'pernom_ducktales_2',
 		matches:['ducktales', 'duck tales'],
 		name:'Ducktales 2',
 		author:'pernom',
 		url:'https://x.com/gaaradark_'
-	},
-	{
+	}, {
 		id:'pernom_nintendo_world_cup',
 		matches:['nintendo world cup', 'soccer', 'fifa'],
 		name:'Nintendo World Cup',
 		author:'pernom',
 		url:'https://x.com/gaaradark_'
 	},
+
 	{
 		id:'peachflavored_ninja_gaiden_shadow',
 		matches:['ninja gaiden', 'shadow warriors', 'ninja ryuuken den'],
 		name:'Ninja Gaiden: Shadow Warriors',
 		author:'peachflavored',
 		url:'https://x.com/peachflavor3d'
-	},
-	{
+	}, {
 		id:'peachflavored_probotector',
 		matches:['probotector'],
 		name:'Probotector',
 		author:'peachflavored',
 		url:'https://x.com/peachflavor3d'
 	},
+
 	{
 		id:'angrysonics_bubsy_2_eygpt',
 		matches:['bubsy', 'bubsy ii', 'bubsy 2'],
@@ -97,72 +94,70 @@ export const BORDER_GALLERY=[
 		author:'AngrySonics',
 		url:'https://bsky.app/profile/angrysonics.bsky.social'
 	},
+
 	{
 		id:'ricardo_mela_sagaia',
 		matches:['sagaia'],
 		name:'Sagaia',
 		author:'ricardo-mela'
 	},
+
 	{
 		id:'tvsmrneil_burgertime_deluxe',
 		matches:['burger time', 'burgertime'],
 		name:'BurgerTime Deluxe',
 		author:'TVsMrNeil'
-	},
-	{
+	}, {
 		id:'tvsmrneil_shadowgate_classic',
 		matches:['shadow gate', 'shadowgate'],
 		name:'Shadowgate Classic',
 		author:'TVsMrNeil'
-	},
-	{
+	}, {
 		id:'tvsmrneil_mario_golf',
 		matches:['mario golf'],
 		name:'Mario Golf',
 		author:'TVsMrNeil'
-	},
-	{
+	}, {
 		id:'tvsmrneil_mario_tennis',
 		matches:['mario tennis'],
 		name:'Mario Tennis',
 		author:'TVsMrNeil'
-	},
-	{
+	}, {
 		id:'tvsmrneil_jetsons_in_robot_panic',
 		matches:['jetsons'],
 		name:'Jetsons in Robot Panic',
 		author:'TVsMrNeil'
-	},
-	{
+	}, {
 		id:'tvsmrneil_ducktales',
 		matches:['ducktales', 'duck tales'],
 		name:'Ducktales',
 		author:'TVsMrNeil'
-	},
-	{
+	}, {
 		id:'tvsmrneil_pac_man',
 		matches:['pacman', 'pac man'],
 		name:'Pac-Man',
 		author:'TVsMrNeil'
-	},
-	{
+	}, {
 		id:'tvsmrneil_ms_pac_man',
 		matches:['ms pacman', 'ms pac man'],
 		name:'Pac-Man',
 		author:'TVsMrNeil'
 	},
+
 	{
 		id:'valtteams_space_time_star_beasts',
 		matches:['shi kong xing shou', 'space time star beasts'],
 		name:'Shi Kong Xing Shou (Space Time Star Beasts)',
 		author:'Valtteams'
 	},
+
 	{
 		id:'mime64_final_fantasy_adventure',
 		matches:['final fantasy adventure'],
 		name:'Final Fantasy Adventure',
 		author:'mime64'
 	},
+
 	{
 		id:'marcdwyz_mega_man_3',
 		matches:['mega man 3', 'megaman 3', 'mega man iii', 'megaman iii', 'rockman world 3', 'mega man world 3', 'megaman world 3'],
@@ -175,8 +170,7 @@ export const BORDER_GALLERY=[
 			'#af481f',
 			'#004000'
 		]
-	},
-	{
+	}, {
 		id:'marcdwyz_mega_man',
 		matches:['mega man', 'megaman', 'rockman'],
 		name:'Mega Man',
@@ -188,8 +182,7 @@ export const BORDER_GALLERY=[
 			'#af481f',
 			'#004000'
 		]
-	},
-	{
+	}, {
 		id:'marcdwyz_kirby',
 		matches:['kirby'],
 		name:'Kirby',
@@ -201,8 +194,7 @@ export const BORDER_GALLERY=[
 			'#7f30ef',
 			'#2f289f'
 		]
-	},
-	{
+	}, {
 		id:'marcdwyz_kirby_night',
 		matches:['kirby'],
 		name:'Kirby (night)',
@@ -214,6 +206,62 @@ export const BORDER_GALLERY=[
 			'#7f30ef',
 			'#2f289f'
 		]
+	},
+
+	{
+		id:'dkenthusiast88_yoshi_eu',
+		matches:['mario_and_yoshi'],
+		name:'Yoshi (EU)',
+		author:'DKEnthusiast88',
+		url:'https://github.com/DKEnthusiast88'
+	}, {
+		id:'dkenthusiast88_yoshi_us',
+		matches:['yoshi'],
+		name:'Yoshi (US)',
+		author:'DKEnthusiast88',
+		url:'https://github.com/DKEnthusiast88'
+	}, {
+		id:'dkenthusiast88_yoshi_jp',
+		matches:['yoshi_no_tamago'],
+		name:'Yoshi (JP)',
+		author:'DKEnthusiast88',
+		url:'https://github.com/DKEnthusiast88'
+	}, {
+		id:'dkenthusiast88_smbdx_mario_luigi',
+		matches:['super_mario_bros_deluxe'],
+		name:'Super Mario Bros. Deluxe (Mario &amp; Luigi)',
+		author:'DKEnthusiast88',
+		url:'https://github.com/DKEnthusiast88'
+	}, {
+		id:'dkenthusiast88_smbdx_goomba_buzzy_beetle',
+		matches:['super_mario_bros_deluxe'],
+		name:'Super Mario Bros. Deluxe (Goomba &amp; Buzzy Beetle)',
+		author:'DKEnthusiast88',
+		url:'https://github.com/DKEnthusiast88'
+	}, {
+		id:'dkenthusiast88_smbdx_spiny_lakitu',
+		matches:['super_mario_bros_deluxe'],
+		name:'Super Mario Bros. Deluxe (Spiny &amp; Lakitu)',
+		author:'DKEnthusiast88',
+		url:'https://github.com/DKEnthusiast88'
+	}, {
+		id:'dkenthusiast88_smbdx_cheep_cheep_blooper',
+		matches:['super_mario_bros_deluxe'],
+		name:'Super Mario Bros. Deluxe (Cheep Cheep &amp; Blooper)',
+		author:'DKEnthusiast88',
+		url:'https://github.com/DKEnthusiast88'
+	}, {
+		id:'dkenthusiast88_smbdx_hammer_bro_bowser',
+		matches:['super_mario_bros_deluxe'],
+		name:'Super Mario Bros. Deluxe (Hammer Bro &amp; Bowser)',
+		author:'DKEnthusiast88',
+		url:'https://github.com/DKEnthusiast88'
+	}, {
+		id:'dkenthusiast88_pokemon_crystal',
+		matches:['pokemon_crystal'],
+		name:'Pokémon Crystal Edition',
+		author:'DKEnthusiast88',
+		url:'https://github.com/DKEnthusiast88'
 	},
 
 	/* extracted from official SGB games */
@@ -239,7 +287,8 @@ export const BORDER_GALLERY=[
 
 	/* custom GB based borders */
 	{id:'tvsmrneil_gbl', name:'GB Light', author:'TVsMrNeil'},
-	{id:'tvsmrneil_gbc', name:'GB Color', author:'TVsMrNeil'}
+	{id:'tvsmrneil_gbc', name:'GB Color', author:'TVsMrNeil'},
+	{id:'dkenthusiast88_gbhorror', name:'GB Horror', author:'DKEnthusiast88'}
 ];
 
 
